@@ -8,7 +8,7 @@ import SponsorHeartLink from "../components/SponsorHeartLink.astro";
 import SectionTitle from "../components/SectionTitle.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
-const chromeLogoUrl = '/chrome-logo.svg';
+const chromeLogoUrl = "/chrome-logo.svg";
 
 const recentPosts = (await getPublishedBlogPosts()).slice(0, 3);
 ---
@@ -62,84 +62,68 @@ const recentPosts = (await getPublishedBlogPosts()).slice(0, 3);
             </div>
         </section>
 
-
         <section id="who-its-for" class="border-t border-foreground/20">
             <SectionIntro>
                 <SectionTitle>Built for real attention</SectionTitle>
                 <p class="text-base leading-7 text-muted-foreground">
-                    Prohibeo is for people who want a little more control over
-                    their online habits without turning the day into a strict
-                    productivity system. Whether you are working, studying, or
-                    just trying to stay with one thing a bit longer, it helps
-                    make fewer distractions the default.
+                    Prohibeo is for people who want a little more control
+                    online without turning the day into a productivity system.
+                    It makes fewer distractions the default, whether you are
+                    working, studying, or trying to stay with one thing longer.
                 </p>
             </SectionIntro>
             <div class="grid grid-cols-1 pl-px pt-px md:grid-cols-3">
                 <GridBox as="article">
-                    <h3 class="mb-4 text-lg font-semibold">
-                        For busy professionals
-                    </h3>
+                    <h3 class="mb-4 text-lg font-semibold">For busy professionals</h3>
                     <p class="text-sm leading-6 text-muted-foreground">
-                        When your work happens in the browser, it is easy to
-                        lose time to tabs you never meant to open. Prohibeo
-                        helps protect focus during the parts of the day that
-                        need your full attention, without adding friction to
-                        everything else.
+                        When work happens in the browser, it is easy to drift
+                        into tabs you never meant to open. Prohibeo helps
+                        protect the hours that need your full attention.
                     </p>
                 </GridBox>
                 <GridBox as="article">
-                    <h3 class="mb-4 text-lg font-semibold">
-                        For days when focus is harder to hold
-                    </h3>
+                    <h3 class="mb-4 text-lg font-semibold">For harder focus days</h3>
                     <p class="text-sm leading-6 text-muted-foreground">
-                        If you have ADHD, or if online distractions pull you
-                        away faster than you would like, Prohibeo can make your
-                        environment feel a little calmer and more intentional.
-                        It is not a fix, just a practical way to reduce some of
-                        the easy detours that break momentum.
+                        If you have ADHD, or focus is simply harder some days,
+                        Prohibeo can make your browser feel calmer and more
+                        intentional. It is not a fix, just a practical way to
+                        remove easy detours.
                     </p>
                 </GridBox>
                 <GridBox as="article">
-                    <h3 class="mb-4 text-lg font-semibold">
-                        For students and creators
-                    </h3>
+                    <h3 class="mb-4 text-lg font-semibold">For students and creators</h3>
                     <p class="text-sm leading-6 text-muted-foreground">
-                        Deep work is hard when entertainment, messages, and side
-                        quests are always one click away. Prohibeo helps you
-                        stay with the assignment, draft, edit, or idea in front
-                        of you long enough to actually make progress.
+                        When messages, entertainment, and side quests are close
+                        by, deep work gets harder. Prohibeo helps you stay with
+                        the assignment, draft, or idea in front of you long
+                        enough to make progress.
                     </p>
                 </GridBox>
             </div>
         </section>
 
         <section class="border-t border-foreground/20" id="install">
-            <div class="px-6 py-8 md:px-8 md:py-10">
+            <div class="px-6 py-8 md:px-8 md:py-20">
                 <div class="grid gap-4">
-                    <div class="max-w-3xl">
+                    <div class="mx-auto text-center max-w-3xl">
                         <SectionTitle
                             >Make your browser a little quieter</SectionTitle
                         >
-                        <p class="text-base leading-7 text-muted-foreground">
+                        <p class="mb-6 text-base leading-7 text-muted-foreground">
                             Prohibeo helps you block the sites that pull you off
                             course, without turning your day into a battle of
                             willpower. Set your rules once, keep your browsing
                             calm, and let your browser do less of the tempting.
                         </p>
-                    </div>
-                    <div class="flex flex-col gap-3 sm:flex-row">
                         <Button
                             href="https://chromewebstore.google.com/category/extensions"
                             size="lg"
                         >
                             Add Prohibeo
                             <img alt="" class="h-4 w-4" src={chromeLogoUrl} />
-
-                        </Button>
-                        <Button href="/blog/" size="lg" variant="secondary">
-                            Read the blog
                         </Button>
                     </div>
+
                 </div>
             </div>
         </section>
@@ -186,7 +170,9 @@ const recentPosts = (await getPublishedBlogPosts()).slice(0, 3);
                                     class="block text-sm text-muted-foreground"
                                     datetime={post.data.publishDate.toISOString()}
                                 >
-                                    {formatBlogPublishDate(post.data.publishDate)}
+                                    {formatBlogPublishDate(
+                                        post.data.publishDate,
+                                    )}
                                 </time>
                                 <h3 class="mt-3 mb-3 text-lg font-semibold">
                                     <a href={`/blog/${post.id}/`}>

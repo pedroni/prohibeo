@@ -10,6 +10,18 @@ export default defineManifest({
   action: {
     default_title: 'Prohibeo',
     default_popup: 'index.html',
+    default_icon: {
+      '16': 'src/assets/icon16.png',
+      '32': 'src/assets/icon32.png',
+      '48': 'src/assets/icon48.png',
+      '128': 'src/assets/icon128.png',
+    },
+  },
+  icons: {
+    '16': 'src/assets/icon16.png',
+    '32': 'src/assets/icon32.png',
+    '48': 'src/assets/icon48.png',
+    '128': 'src/assets/icon128.png',
   },
   content_scripts: [
     {
