@@ -31,16 +31,16 @@ export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
   const sectionOnlyRule = usesSectionHidingOnly(rule.domain)
 
   return (
-    <article className="border border-black p-4 dark:border-neutral-700">
+    <article className="border border-foreground/20 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-3">
-            <span className="inline-flex h-9 w-9 items-center justify-center border border-black dark:border-neutral-700">
+            <span className="inline-flex h-9 w-9 items-center justify-center border border-foreground/20">
               <FontAwesomeIcon icon={getSiteIcon(rule.domain)} />
             </span>
             <div className="min-w-0">
               <h2 className="truncate text-lg font-bold">{rule.domain}</h2>
-              <p className="text-xs font-medium uppercase tracking-wide">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {rule.blockingMode === 'always'
                   ? sectionOnlyRule
                     ? 'Sections hidden'
@@ -56,7 +56,7 @@ export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
             type="button"
             aria-label={`Edit ${rule.domain}`}
             onClick={onEdit}
-            className="inline-flex h-9 w-9 items-center justify-center border border-black dark:border-neutral-700"
+            className="inline-flex h-9 w-9 items-center justify-center border border-foreground/20"
           >
             <FontAwesomeIcon icon={faGear} />
           </button>
@@ -64,7 +64,7 @@ export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
             type="button"
             aria-label={`Remove ${rule.domain}`}
             onClick={onRemove}
-            className="inline-flex h-9 w-9 items-center justify-center border border-black dark:border-neutral-700"
+            className="inline-flex h-9 w-9 items-center justify-center border border-foreground/20"
           >
             <FontAwesomeIcon icon={faXmark} />
           </button>
@@ -75,8 +75,8 @@ export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
         <span
           className={`border px-2 py-1 text-xs font-semibold ${
             blockingNow
-              ? 'border-black bg-black text-white dark:border-neutral-300 dark:bg-[#E6E6E6] dark:text-[#131313]'
-              : 'border-black bg-white text-black dark:border-neutral-700 dark:bg-[#131313] dark:text-[#E6E6E6]'
+              ? 'border-foreground bg-foreground text-background'
+              : 'border-foreground/20 bg-background text-foreground'
           }`}
         >
           {blockingNow
@@ -89,13 +89,13 @@ export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
         </span>
 
         {enabledPresetLabels.map((label) => (
-          <span key={label} className="border border-black px-2 py-1 text-xs font-semibold dark:border-neutral-700">
+          <span key={label} className="border border-foreground/20 px-2 py-1 text-xs font-semibold">
             {label}
           </span>
         ))}
 
         {selectorCount > 0 ? (
-          <span className="border border-black px-2 py-1 text-xs font-semibold dark:border-neutral-700">
+          <span className="border border-foreground/20 px-2 py-1 text-xs font-semibold">
             {selectorCount} selector{selectorCount === 1 ? '' : 's'}
           </span>
         ) : null}

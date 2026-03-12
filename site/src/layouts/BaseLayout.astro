@@ -27,32 +27,32 @@ const canonicalUrl = new URL(pathname, Astro.site ?? 'https://example.com');
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
   </head>
-  <body class="min-w-[320px] bg-white px-0 text-black dark:bg-[#131313] dark:text-[#E6E6E6] md:p-6">
-    <div class="mx-auto w-full max-w-[1024px] border-y border-black bg-white dark:border-neutral-700 dark:bg-[#131313] md:border">
-      <header class="border-b border-black dark:border-neutral-700">
-        <div class="flex w-full flex-col gap-4 px-6 py-5 md:flex-row md:items-center md:justify-between md:px-8">
-          <a class="inline-flex items-center gap-3 text-base font-extrabold tracking-[-0.03em]" href="/">
+  <body class="min-w-[320px] bg-background px-0 text-foreground md:p-6">
+    <div class="mx-auto w-full max-w-[1024px] border-y border-foreground/20 bg-background md:border">
+      <header class="border-b border-foreground/20">
+        <div class="flex w-full flex-col md:flex-row md:items-stretch md:justify-between">
+          <a class="inline-flex items-center gap-3 px-6 py-5 text-base font-extrabold tracking-[-0.03em] md:px-8" href="/">
             <span
               aria-hidden="true"
-              class="inline-flex h-10 w-10 items-center justify-center border border-black dark:border-neutral-700"
+              class="inline-flex h-10 w-10 items-center justify-center border border-foreground/20"
             >
               P
             </span>
             <span>Prohibeo</span>
           </a>
-          <nav class="flex flex-wrap gap-4 text-sm" aria-label="Primary">
-            <a href="/#features">Features</a>
-            <a href="/#install">Install</a>
-            <a href="/blog/">Blog</a>
+          <nav class="flex flex-col border-t border-foreground/20 text-sm md:flex-row md:self-stretch md:border-t-0" aria-label="Primary">
+            <a class="flex items-center px-6 py-3 transition-colors hover:bg-foreground/20 md:border-l md:border-foreground/20 md:px-5 md:py-0" href="/#features">Features</a>
+            <a class="flex items-center border-t border-foreground/20 px-6 py-3 transition-colors hover:bg-foreground/20 md:border-t-0 md:border-l md:border-foreground/20 md:px-5 md:py-0" href="/#install">Install</a>
+            <a class="flex items-center border-t border-foreground/20 px-6 py-3 transition-colors hover:bg-foreground/20 md:border-t-0 md:border-x md:border-foreground/20 md:px-5 md:py-0" href="/blog/">Blog</a>
           </nav>
         </div>
       </header>
       <slot />
-      <footer class="border-t border-black dark:border-neutral-700">
+      <footer class="border-t border-foreground/20">
         <div class="grid gap-8 px-6 py-8 md:grid-cols-2 md:px-8">
           <div>
             <strong class="mb-2 block">Prohibeo</strong>
-            <p class="max-w-xl text-sm leading-6 text-neutral-600 dark:text-neutral-400">
+            <p class="max-w-xl text-sm leading-6 text-muted-foreground">
               A lightweight Chrome extension for blocking distracting sites and hiding
               the parts of the web that pull your attention away.
             </p>

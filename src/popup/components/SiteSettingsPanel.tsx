@@ -131,8 +131,8 @@ export function SiteSettingsPanel({
   }
 
   return (
-    <section className="absolute inset-0 z-10 flex flex-col bg-white pb-4 dark:bg-[#131313] dark:text-[#E6E6E6]">
-      <header className="border-b border-black px-4 py-4 dark:border-neutral-700">
+    <section className="absolute inset-0 z-10 flex flex-col bg-background pb-4 text-foreground">
+      <header className="border-b border-foreground/20 px-4 py-4">
         <button
           type="button"
           onClick={onClose}
@@ -143,14 +143,16 @@ export function SiteSettingsPanel({
         </button>
 
         <h2 className="text-2xl font-bold">Website Settings - {rule.domain}</h2>
-        <p className="text-sm">Customize how this website appears and behaves.</p>
+        <p className="text-sm text-muted-foreground">
+          Customize how this website appears and behaves.
+        </p>
       </header>
 
       <div className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
-        <section className="space-y-3 border border-black p-4 dark:border-neutral-700">
+        <section className="space-y-3 border border-foreground/20 p-4">
           <div>
             <h3 className="text-lg font-bold">{sectionOnlyRule ? 'Activation' : 'Blocking'}</h3>
-            <p className="text-sm">
+            <p className="text-sm text-muted-foreground">
               {sectionOnlyRule
                 ? 'YouTube is never replaced with the Prohibeo block screen. These controls decide when its distracting sections are hidden.'
                 : 'New sites default to always blocked. Switch to a strict schedule when needed.'}
@@ -159,13 +161,13 @@ export function SiteSettingsPanel({
 
           <div className="flex flex-wrap gap-2">
             <Button
-              active={rule.blockingMode === 'always'}
+              variant={rule.blockingMode === 'always' ? 'primary' : 'secondary'}
               onClick={() => handleBlockingModeChange('always')}
             >
               {sectionOnlyRule ? 'Always active' : 'Always block'}
             </Button>
             <Button
-              active={rule.blockingMode === 'scheduled'}
+              variant={rule.blockingMode === 'scheduled' ? 'primary' : 'secondary'}
               onClick={() => handleBlockingModeChange('scheduled')}
             >
               {sectionOnlyRule ? 'Scheduled activation' : 'Scheduled blocking'}
@@ -173,15 +175,15 @@ export function SiteSettingsPanel({
           </div>
 
           {rule.blockingMode === 'scheduled' ? (
-            <div className="space-y-4 border-t border-black pt-4 dark:border-neutral-700">
+            <div className="space-y-4 border-t border-foreground/20 pt-4">
               <div>
                 <p className="text-sm font-bold">Strict Mode weekdays</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {WEEKDAY_ORDER.map((weekday) => (
                     <Button
                       key={weekday}
-                      active={rule.schedule.weekdays.includes(weekday)}
-                      className="min-w-12 px-3 py-2 text-xs"
+                      size="xs"
+                      variant={rule.schedule.weekdays.includes(weekday) ? 'primary' : 'secondary'}
                       onClick={() => toggleWeekday(weekday)}
                     >
                       {WEEKDAY_LABELS[weekday]}
@@ -196,7 +198,7 @@ export function SiteSettingsPanel({
                   <select
                     value={rule.schedule.startHour}
                     onChange={(event) => updateHour('startHour', event.target.value)}
-                    className="w-full border border-black bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-[#131313] dark:text-[#E6E6E6]"
+                    className="w-full border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
                   >
                     {HOUR_OPTIONS.map((hour) => (
                       <option key={hour} value={hour}>
@@ -211,7 +213,7 @@ export function SiteSettingsPanel({
                   <select
                     value={rule.schedule.endHour}
                     onChange={(event) => updateHour('endHour', event.target.value)}
-                    className="w-full border border-black bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-[#131313] dark:text-[#E6E6E6]"
+                    className="w-full border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
                   >
                     {HOUR_OPTIONS.map((hour) => (
                       <option key={hour} value={hour}>
@@ -230,10 +232,10 @@ export function SiteSettingsPanel({
         </section>
 
         {presetOptions.length > 0 ? (
-          <section className="space-y-4 border border-black p-4 dark:border-neutral-700">
+          <section className="space-y-4 border border-foreground/20 p-4">
             <div>
               <h3 className="text-lg font-bold">Eliminate distractions</h3>
-              <p className="text-sm">
+              <p className="text-sm text-muted-foreground">
                 Hide distracting elements to stay focused while the site remains accessible.
               </p>
             </div>
@@ -244,11 +246,11 @@ export function SiteSettingsPanel({
               {presetOptions.map((option) => (
                 <div
                   key={option.key}
-                  className="flex items-start justify-between gap-3 border-t border-black pt-4 first:border-t-0 first:pt-0 dark:border-neutral-700"
+                  className="flex items-start justify-between gap-3 border-t border-foreground/20 pt-4 first:border-t-0 first:pt-0"
                 >
                   <div className="space-y-1">
                     <p className="font-bold">{option.label}</p>
-                    <p className="text-sm">{option.description}</p>
+                    <p className="text-sm text-muted-foreground">{option.description}</p>
                   </div>
                   <Toggle
                     checked={Boolean(rule.presetToggles[option.key])}
@@ -256,15 +258,15 @@ export function SiteSettingsPanel({
                     onToggle={() => togglePresetOption(option.key)}
                   />
                 </div>
-                ))}
+              ))}
             </div>
           </section>
         ) : null}
 
-        <section className="space-y-4 border border-black p-4 dark:border-neutral-700">
+        <section className="space-y-4 border border-foreground/20 p-4">
           <div>
             <h3 className="text-lg font-bold">Custom selectors</h3>
-            <p className="text-sm">
+            <p className="text-sm text-muted-foreground">
               Add CSS selectors to hide specific sections on this site.
             </p>
           </div>
@@ -287,7 +289,7 @@ export function SiteSettingsPanel({
           </div>
 
           {selectorError ? (
-            <p className="border border-black px-3 py-2 text-sm font-semibold dark:border-neutral-700">
+            <p className="border border-foreground/20 px-3 py-2 text-sm font-semibold">
               {selectorError}
             </p>
           ) : null}
@@ -297,14 +299,14 @@ export function SiteSettingsPanel({
               {rule.customSelectors.map((selector) => (
                 <div
                   key={selector}
-                  className="flex items-center justify-between gap-3 border border-black px-3 py-2 dark:border-neutral-700"
+                  className="flex items-center justify-between gap-3 border border-foreground/20 px-3 py-2"
                 >
                   <code className="min-w-0 flex-1 truncate text-sm">{selector}</code>
                   <button
                     type="button"
                     aria-label={`Remove ${selector}`}
                     onClick={() => handleRemoveSelector(selector)}
-                    className="inline-flex h-8 w-8 items-center justify-center border border-black dark:border-neutral-700"
+                    className="inline-flex h-8 w-8 items-center justify-center border border-foreground/20"
                   >
                     <FontAwesomeIcon icon={faTrashCan} />
                   </button>
@@ -312,7 +314,7 @@ export function SiteSettingsPanel({
               ))}
             </div>
           ) : (
-            <p className="text-sm">No custom selectors added yet.</p>
+            <p className="text-sm text-muted-foreground">No custom selectors added yet.</p>
           )}
         </section>
       </div>

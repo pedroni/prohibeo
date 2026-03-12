@@ -97,8 +97,11 @@ function blockPage(rule: SiteRule): void {
   const style = document.createElement('style')
   style.textContent = `
     :root {
-      color: #000;
-      background: #fff;
+      --background: #fff;
+      --foreground: #000;
+      --border: #000;
+      color: var(--foreground);
+      background: var(--background);
       font-family: Inter, system-ui, sans-serif;
       color-scheme: light dark;
     }
@@ -110,8 +113,8 @@ function blockPage(rule: SiteRule): void {
     html, body {
       margin: 0;
       min-height: 100vh;
-      background: #fff;
-      color: #000;
+      background: var(--background);
+      color: var(--foreground);
     }
 
     .prohibeo-shell {
@@ -124,7 +127,7 @@ function blockPage(rule: SiteRule): void {
 
     .prohibeo-card {
       width: min(480px, 100%);
-      border: 1px solid #000;
+      border: 1px solid var(--border);
       padding: 24px;
     }
 
@@ -150,17 +153,9 @@ function blockPage(rule: SiteRule): void {
 
     @media (prefers-color-scheme: dark) {
       :root {
-        color: #E6E6E6;
-        background: #131313;
-      }
-
-      html, body {
-        background: #131313;
-        color: #E6E6E6;
-      }
-
-      .prohibeo-card {
-        border-color: #525252;
+        --background: #131313;
+        --foreground: #E6E6E6;
+        --border: #525252;
       }
     }
   `
