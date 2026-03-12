@@ -131,8 +131,8 @@ export function SiteSettingsPanel({
   }
 
   return (
-    <section className="absolute inset-0 z-10 flex flex-col bg-white pb-4">
-      <header className="border-b border-black px-4 py-4">
+    <section className="absolute inset-0 z-10 flex flex-col bg-white pb-4 dark:bg-[#131313] dark:text-[#E6E6E6]">
+      <header className="border-b border-black px-4 py-4 dark:border-neutral-700">
         <button
           type="button"
           onClick={onClose}
@@ -147,7 +147,7 @@ export function SiteSettingsPanel({
       </header>
 
       <div className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
-        <section className="space-y-3 border border-black p-4">
+        <section className="space-y-3 border border-black p-4 dark:border-neutral-700">
           <div>
             <h3 className="text-lg font-bold">{sectionOnlyRule ? 'Activation' : 'Blocking'}</h3>
             <p className="text-sm">
@@ -173,7 +173,7 @@ export function SiteSettingsPanel({
           </div>
 
           {rule.blockingMode === 'scheduled' ? (
-            <div className="space-y-4 border-t border-black pt-4">
+            <div className="space-y-4 border-t border-black pt-4 dark:border-neutral-700">
               <div>
                 <p className="text-sm font-bold">Strict Mode weekdays</p>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -196,7 +196,7 @@ export function SiteSettingsPanel({
                   <select
                     value={rule.schedule.startHour}
                     onChange={(event) => updateHour('startHour', event.target.value)}
-                    className="w-full border border-black bg-white px-3 py-2 text-sm"
+                    className="w-full border border-black bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-[#131313] dark:text-[#E6E6E6]"
                   >
                     {HOUR_OPTIONS.map((hour) => (
                       <option key={hour} value={hour}>
@@ -211,7 +211,7 @@ export function SiteSettingsPanel({
                   <select
                     value={rule.schedule.endHour}
                     onChange={(event) => updateHour('endHour', event.target.value)}
-                    className="w-full border border-black bg-white px-3 py-2 text-sm"
+                    className="w-full border border-black bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-[#131313] dark:text-[#E6E6E6]"
                   >
                     {HOUR_OPTIONS.map((hour) => (
                       <option key={hour} value={hour}>
@@ -230,7 +230,7 @@ export function SiteSettingsPanel({
         </section>
 
         {presetOptions.length > 0 ? (
-          <section className="space-y-4 border border-black p-4">
+          <section className="space-y-4 border border-black p-4 dark:border-neutral-700">
             <div>
               <h3 className="text-lg font-bold">Eliminate distractions</h3>
               <p className="text-sm">
@@ -244,7 +244,7 @@ export function SiteSettingsPanel({
               {presetOptions.map((option) => (
                 <div
                   key={option.key}
-                  className="flex items-start justify-between gap-3 border-t border-black pt-4 first:border-t-0 first:pt-0"
+                  className="flex items-start justify-between gap-3 border-t border-black pt-4 first:border-t-0 first:pt-0 dark:border-neutral-700"
                 >
                   <div className="space-y-1">
                     <p className="font-bold">{option.label}</p>
@@ -261,7 +261,7 @@ export function SiteSettingsPanel({
           </section>
         ) : null}
 
-        <section className="space-y-4 border border-black p-4">
+        <section className="space-y-4 border border-black p-4 dark:border-neutral-700">
           <div>
             <h3 className="text-lg font-bold">Custom selectors</h3>
             <p className="text-sm">
@@ -287,7 +287,7 @@ export function SiteSettingsPanel({
           </div>
 
           {selectorError ? (
-            <p className="border border-black px-3 py-2 text-sm font-semibold">
+            <p className="border border-black px-3 py-2 text-sm font-semibold dark:border-neutral-700">
               {selectorError}
             </p>
           ) : null}
@@ -297,14 +297,14 @@ export function SiteSettingsPanel({
               {rule.customSelectors.map((selector) => (
                 <div
                   key={selector}
-                  className="flex items-center justify-between gap-3 border border-black px-3 py-2"
+                  className="flex items-center justify-between gap-3 border border-black px-3 py-2 dark:border-neutral-700"
                 >
                   <code className="min-w-0 flex-1 truncate text-sm">{selector}</code>
                   <button
                     type="button"
                     aria-label={`Remove ${selector}`}
                     onClick={() => handleRemoveSelector(selector)}
-                    className="inline-flex h-8 w-8 items-center justify-center border border-black"
+                    className="inline-flex h-8 w-8 items-center justify-center border border-black dark:border-neutral-700"
                   >
                     <FontAwesomeIcon icon={faTrashCan} />
                   </button>

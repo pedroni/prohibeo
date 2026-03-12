@@ -27,14 +27,14 @@ const canonicalUrl = new URL(pathname, Astro.site ?? 'https://example.com');
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
   </head>
-  <body class="min-w-[320px] bg-white px-0 text-black md:p-6">
-    <div class="mx-auto w-full max-w-[1024px] border-y border-black bg-white md:border">
-      <header class="border-b border-black">
+  <body class="min-w-[320px] bg-white px-0 text-black dark:bg-[#131313] dark:text-[#E6E6E6] md:p-6">
+    <div class="mx-auto w-full max-w-[1024px] border-y border-black bg-white dark:border-neutral-700 dark:bg-[#131313] md:border">
+      <header class="border-b border-black dark:border-neutral-700">
         <div class="flex w-full flex-col gap-4 px-6 py-5 md:flex-row md:items-center md:justify-between md:px-8">
           <a class="inline-flex items-center gap-3 text-base font-extrabold tracking-[-0.03em]" href="/">
             <span
               aria-hidden="true"
-              class="inline-flex h-10 w-10 items-center justify-center border border-black"
+              class="inline-flex h-10 w-10 items-center justify-center border border-black dark:border-neutral-700"
             >
               P
             </span>
@@ -48,11 +48,11 @@ const canonicalUrl = new URL(pathname, Astro.site ?? 'https://example.com');
         </div>
       </header>
       <slot />
-      <footer class="border-t border-black">
+      <footer class="border-t border-black dark:border-neutral-700">
         <div class="grid gap-8 px-6 py-8 md:grid-cols-2 md:px-8">
           <div>
             <strong class="mb-2 block">Prohibeo</strong>
-            <p class="max-w-xl text-sm leading-6 text-neutral-600">
+            <p class="max-w-xl text-sm leading-6 text-neutral-600 dark:text-neutral-400">
               A lightweight Chrome extension for blocking distracting sites and hiding
               the parts of the web that pull your attention away.
             </p>

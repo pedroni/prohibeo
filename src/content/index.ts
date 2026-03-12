@@ -100,6 +100,7 @@ function blockPage(rule: SiteRule): void {
       color: #000;
       background: #fff;
       font-family: Inter, system-ui, sans-serif;
+      color-scheme: light dark;
     }
 
     * {
@@ -145,6 +146,22 @@ function blockPage(rule: SiteRule): void {
       margin: 0 0 12px;
       font-size: 16px;
       line-height: 1.5;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color: #E6E6E6;
+        background: #131313;
+      }
+
+      html, body {
+        background: #131313;
+        color: #E6E6E6;
+      }
+
+      .prohibeo-card {
+        border-color: #525252;
+      }
     }
   `
 

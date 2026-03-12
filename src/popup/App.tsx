@@ -123,11 +123,11 @@ export default function App() {
   }
 
   return (
-    <div className="relative min-h-[560px] w-[420px] bg-white text-black">
+    <div className="relative min-h-[560px] w-[420px] bg-white text-black dark:bg-[#131313] dark:text-[#E6E6E6]">
       <div className="flex min-h-[560px] flex-col">
-        <header className="border-b border-black px-4 py-4">
+        <header className="border-b border-black px-4 py-4 dark:border-neutral-700">
           <div className="flex items-center gap-3">
-            <span className="inline-flex h-12 w-12 items-center justify-center border border-black text-lg">
+            <span className="inline-flex h-12 w-12 items-center justify-center border border-black text-lg dark:border-neutral-700">
               <FontAwesomeIcon icon={faBan} />
             </span>
             <div>
@@ -138,7 +138,7 @@ export default function App() {
         </header>
 
         <main className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
-          <form onSubmit={handleAddWebsite} className="space-y-3 border border-black p-4">
+          <form onSubmit={handleAddWebsite} className="space-y-3 border border-black p-4 dark:border-neutral-700">
             <div>
               <h2 className="text-lg font-bold">Website to block</h2>
               <p className="text-sm">
@@ -168,7 +168,7 @@ export default function App() {
           </form>
 
           {errorMessage ? (
-            <p className="border border-black px-3 py-2 text-sm font-semibold">{errorMessage}</p>
+            <p className="border border-black px-3 py-2 text-sm font-semibold dark:border-neutral-700">{errorMessage}</p>
           ) : null}
 
           <section className="space-y-3">
@@ -182,7 +182,7 @@ export default function App() {
             {isLoading ? <p className="text-sm">Loading your settings...</p> : null}
 
             {!isLoading && siteRules.length === 0 ? (
-              <div className="border border-black p-4">
+              <div className="border border-black p-4 dark:border-neutral-700">
                 <p className="font-bold">No websites added yet.</p>
                 <p className="text-sm">
                   Add a domain to start blocking full pages or hiding specific sections.

@@ -2,13 +2,13 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 const boxClass =
-  '-ml-px -mt-px border border-black p-6 md:p-8';
+  '-ml-px -mt-px border border-black p-6 dark:border-neutral-700 md:p-8';
 const sectionIntroClass =
   'max-w-3xl px-6 py-8 md:px-8 md:py-10';
 const sectionTitleClass =
   'mb-3 text-[2rem] leading-none font-bold tracking-[-0.04em] md:text-[2.5rem]';
 const buttonBaseClass =
-  'inline-flex items-center justify-center border border-black px-4 py-3 text-sm font-semibold';
+  'inline-flex items-center justify-center border border-black px-4 py-3 text-sm font-semibold dark:border-neutral-700';
 ---
 
 <BaseLayout
@@ -19,41 +19,41 @@ const buttonBaseClass =
   <main>
     <section>
       <div class="grid min-h-[calc(100vh-77px)] grid-cols-1 md:grid-cols-2">
-        <div class="border-b border-black px-6 py-10 md:border-r md:border-b-0 md:px-8 md:py-12">
-          <span class="inline-flex border border-black px-3 py-1 text-xs font-bold uppercase tracking-[0.08em]">
+        <div class="border-b border-black px-6 py-10 dark:border-neutral-700 md:border-r md:border-b-0 md:px-8 md:py-12">
+          <span class="inline-flex border border-black px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] dark:border-neutral-700">
             Minimal focus tools for Chrome
           </span>
           <h1 class="mt-6 text-[2.8rem] leading-[0.95] font-bold tracking-[-0.05em] md:text-[4.9rem]">
             Block distractions without fighting your browser.
           </h1>
-          <p class="max-w-2xl text-base leading-7 text-neutral-700">
+          <p class="max-w-2xl text-base leading-7 text-neutral-700 dark:text-neutral-400">
             Prohibeo helps you block websites, schedule focused time, and hide the
             noisy parts of sites like YouTube so you can stay on task.
           </p>
           <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a class={`${buttonBaseClass} bg-black text-white`} href="#install">
+            <a class={`${buttonBaseClass} bg-black text-white dark:bg-[#E6E6E6] dark:text-[#131313]`} href="#install">
               See install options
             </a>
-            <a class={`${buttonBaseClass} bg-white text-black`} href="/blog/">
+            <a class={`${buttonBaseClass} bg-white text-black dark:bg-[#131313] dark:text-[#E6E6E6]`} href="/blog/">
               Read the blog
             </a>
           </div>
           <div class="mt-10 grid grid-cols-1 pl-px pt-px md:grid-cols-3">
             <div class={boxClass}>
               <strong class="mb-2 block text-2xl tracking-[-0.04em]">2 modes</strong>
-              <span class="text-sm leading-6 text-neutral-600">
+              <span class="text-sm leading-6 text-neutral-600 dark:text-neutral-400">
                 Always block or scheduled blocking
               </span>
             </div>
             <div class={boxClass}>
               <strong class="mb-2 block text-2xl tracking-[-0.04em]">Fine control</strong>
-              <span class="text-sm leading-6 text-neutral-600">
+              <span class="text-sm leading-6 text-neutral-600 dark:text-neutral-400">
                 Hide comments, shorts, sidebars, and more
               </span>
             </div>
             <div class={boxClass}>
               <strong class="mb-2 block text-2xl tracking-[-0.04em]">Local-first</strong>
-              <span class="text-sm leading-6 text-neutral-600">
+              <span class="text-sm leading-6 text-neutral-600 dark:text-neutral-400">
                 Settings stay in your Chrome profile
               </span>
             </div>
@@ -61,31 +61,31 @@ const buttonBaseClass =
         </div>
 
         <div class="px-6 py-10 md:px-8 md:py-12">
-          <div class="h-full border border-black p-5 md:p-6" aria-label="Prohibeo interface preview">
+          <div class="h-full border border-black p-5 dark:border-neutral-700 md:p-6" aria-label="Prohibeo interface preview">
             <div class="mb-4 flex gap-1.5">
-              <span class="h-3 w-3 border border-black"></span>
-              <span class="h-3 w-3 border border-black"></span>
-              <span class="h-3 w-3 border border-black"></span>
+              <span class="h-3 w-3 border border-black dark:border-neutral-700"></span>
+              <span class="h-3 w-3 border border-black dark:border-neutral-700"></span>
+              <span class="h-3 w-3 border border-black dark:border-neutral-700"></span>
             </div>
-            <div class="grid border border-black">
+            <div class="grid border border-black dark:border-neutral-700">
               <div class="p-5">
                 <strong class="block text-base">youtube.com</strong>
-                <p class="mt-2 text-sm leading-6 text-neutral-600">
+                <p class="mt-2 text-sm leading-6 text-neutral-600 dark:text-neutral-400">
                   Scheduled blocking on weekdays, 9am to 5pm
                 </p>
               </div>
-              <div class="border-t border-black p-5">
+              <div class="border-t border-black p-5 dark:border-neutral-700">
                 <strong class="block text-base">Hide distracting sections</strong>
-                <ul class="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-neutral-700">
+                <ul class="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-neutral-700 dark:text-neutral-400">
                   <li>Hide comments</li>
                   <li>Hide home page suggestions</li>
                   <li>Hide shorts</li>
                   <li>Hide video page suggestions</li>
                 </ul>
               </div>
-              <div class="border-t border-black p-5">
+              <div class="border-t border-black p-5 dark:border-neutral-700">
                 <strong class="block text-base">Custom selectors</strong>
-                <p class="mt-2 text-sm leading-6 text-neutral-600">
+                <p class="mt-2 text-sm leading-6 text-neutral-600 dark:text-neutral-400">
                   Add your own CSS selectors for any site you want to clean up.
                 </p>
               </div>
@@ -95,10 +95,10 @@ const buttonBaseClass =
       </div>
     </section>
 
-    <section class="border-t border-black" id="features">
+    <section class="border-t border-black dark:border-neutral-700" id="features">
       <div class={sectionIntroClass}>
         <h2 class={sectionTitleClass}>Everything you need for a low-friction focus setup</h2>
-        <p class="text-base leading-7 text-neutral-700">
+        <p class="text-base leading-7 text-neutral-700 dark:text-neutral-400">
             Prohibeo keeps the workflow simple: add a site, choose how strict you want
             to be, and trim away the distracting sections that still slip through.
         </p>
@@ -106,15 +106,15 @@ const buttonBaseClass =
       <div class="grid grid-cols-1 pl-px pt-px md:grid-cols-3">
         <article class={boxClass}>
           <h3 class="mb-4 text-lg font-semibold">Block entire sites</h3>
-          <ul class="list-disc space-y-3 pl-5 text-sm leading-6 text-neutral-700">
-            <li>Add domains like <code class="border border-black px-1 py-0.5 text-[0.92em]">youtube.com</code> or full URLs.</li>
+          <ul class="list-disc space-y-3 pl-5 text-sm leading-6 text-neutral-700 dark:text-neutral-400">
+            <li>Add domains like <code class="border border-black px-1 py-0.5 text-[0.92em] dark:border-neutral-700">youtube.com</code> or full URLs.</li>
             <li>Apply rules across subdomains automatically.</li>
             <li>Show a blocked-state screen when a site is fully blocked.</li>
           </ul>
         </article>
         <article class={boxClass}>
           <h3 class="mb-4 text-lg font-semibold">Choose when blocking applies</h3>
-          <ul class="list-disc space-y-3 pl-5 text-sm leading-6 text-neutral-700">
+          <ul class="list-disc space-y-3 pl-5 text-sm leading-6 text-neutral-700 dark:text-neutral-400">
             <li>Switch between always-on and scheduled blocking.</li>
             <li>Select weekdays and focus hours.</li>
             <li>Keep rules flexible without adding extra complexity.</li>
@@ -122,7 +122,7 @@ const buttonBaseClass =
         </article>
         <article class={boxClass}>
           <h3 class="mb-4 text-lg font-semibold">Hide the noisy parts instead</h3>
-          <ul class="list-disc space-y-3 pl-5 text-sm leading-6 text-neutral-700">
+          <ul class="list-disc space-y-3 pl-5 text-sm leading-6 text-neutral-700 dark:text-neutral-400">
             <li>Use built-in YouTube section controls.</li>
             <li>Add your own CSS selectors for custom cleanup.</li>
             <li>Keep the useful parts of a page while removing rabbit holes.</li>
@@ -131,37 +131,37 @@ const buttonBaseClass =
       </div>
     </section>
 
-    <section class="border-t border-black" id="install">
+    <section class="border-t border-black dark:border-neutral-700" id="install">
       <div class="px-6 py-8 md:px-8 md:py-10">
         <div class="grid gap-4">
           <div class="max-w-3xl">
             <h2 class={sectionTitleClass}>Install Prohibeo</h2>
-            <p class="text-base leading-7 text-neutral-700">
+            <p class="text-base leading-7 text-neutral-700 dark:text-neutral-400">
               Prohibeo is currently easiest to try as a local Chrome extension build.
               When a Chrome Web Store listing is available, you can swap in that link here
               without changing the site structure.
             </p>
           </div>
-          <ol class="list-decimal space-y-3 pl-5 text-sm leading-6 text-neutral-700">
-            <li>Run <code class="border border-black px-1 py-0.5 text-[0.92em]">npm install</code> in the repo root.</li>
-            <li>Run <code class="border border-black px-1 py-0.5 text-[0.92em]">npm run build</code> to generate the extension in <code class="border border-black px-1 py-0.5 text-[0.92em]">dist/</code>.</li>
-            <li>Open <code class="border border-black px-1 py-0.5 text-[0.92em]">chrome://extensions</code> and enable Developer mode.</li>
-            <li>Choose <strong>Load unpacked</strong> and select the generated <code class="border border-black px-1 py-0.5 text-[0.92em]">dist/</code> folder.</li>
+          <ol class="list-decimal space-y-3 pl-5 text-sm leading-6 text-neutral-700 dark:text-neutral-400">
+            <li>Run <code class="border border-black px-1 py-0.5 text-[0.92em] dark:border-neutral-700">npm install</code> in the repo root.</li>
+            <li>Run <code class="border border-black px-1 py-0.5 text-[0.92em] dark:border-neutral-700">npm run build</code> to generate the extension in <code class="border border-black px-1 py-0.5 text-[0.92em] dark:border-neutral-700">dist/</code>.</li>
+            <li>Open <code class="border border-black px-1 py-0.5 text-[0.92em] dark:border-neutral-700">chrome://extensions</code> and enable Developer mode.</li>
+            <li>Choose <strong>Load unpacked</strong> and select the generated <code class="border border-black px-1 py-0.5 text-[0.92em] dark:border-neutral-700">dist/</code> folder.</li>
           </ol>
         </div>
       </div>
     </section>
 
-    <section class="border-t border-black" id="privacy">
+    <section class="border-t border-black dark:border-neutral-700" id="privacy">
       <div class="px-6 py-8 md:px-8 md:py-10">
         <div class="grid gap-4">
           <div class="max-w-3xl">
             <h2 class={sectionTitleClass}>Privacy by default</h2>
-            <p class="text-base leading-7 text-neutral-700">
-              Prohibeo stores your settings in <code class="border border-black px-1 py-0.5 text-[0.92em]">chrome.storage.local</code>, so your website rules stay in your browser profile on your machine.
+            <p class="text-base leading-7 text-neutral-700 dark:text-neutral-400">
+              Prohibeo stores your settings in <code class="border border-black px-1 py-0.5 text-[0.92em] dark:border-neutral-700">chrome.storage.local</code>, so your website rules stay in your browser profile on your machine.
             </p>
           </div>
-          <ul class="list-disc space-y-3 pl-5 text-sm leading-6 text-neutral-700">
+          <ul class="list-disc space-y-3 pl-5 text-sm leading-6 text-neutral-700 dark:text-neutral-400">
             <li>No account system</li>
             <li>No billing or upgrade flow</li>
             <li>No cloud sync in the current version</li>
@@ -170,21 +170,21 @@ const buttonBaseClass =
       </div>
     </section>
 
-    <section class="border-t border-black">
+    <section class="border-t border-black dark:border-neutral-700">
       <div class={sectionIntroClass}>
         <h2 class={sectionTitleClass}>Latest from the blog</h2>
-        <p class="text-base leading-7 text-neutral-700">
+        <p class="text-base leading-7 text-neutral-700 dark:text-neutral-400">
           Use MDX posts for product updates, focus tips, release notes, or Chrome Web
           Store launch announcements.
         </p>
       </div>
       <div class="grid grid-cols-1 pl-px pt-px">
         <article class={boxClass}>
-          <time class="block text-sm text-neutral-600" datetime="2026-03-12">March 12, 2026</time>
+          <time class="block text-sm text-neutral-600 dark:text-neutral-400" datetime="2026-03-12">March 12, 2026</time>
           <h3 class="mt-3 mb-3 text-lg font-semibold">
             <a href="/blog/welcome-to-prohibeo/">Welcome to Prohibeo</a>
           </h3>
-          <p class="max-w-2xl text-sm leading-6 text-neutral-700">
+          <p class="max-w-2xl text-sm leading-6 text-neutral-700 dark:text-neutral-400">
             A starter post explaining what the extension does and how the landing page
             blog is structured.
           </p>
