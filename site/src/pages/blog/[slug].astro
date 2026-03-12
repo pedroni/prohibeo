@@ -17,7 +17,7 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 ---
 
 <BaseLayout
@@ -25,34 +25,83 @@ const { Content } = await render(post);
   description={post.data.description}
   pathname={`/blog/${post.id}/`}
 >
-  <main>
-    <article class="border-t border-foreground/20 px-6 py-8 md:px-8 md:py-10">
-      <a class="text-sm text-muted-foreground" href="/blog/">Back to blog</a>
-      <h1 class="mt-4 mb-2 text-[2.25rem] leading-none font-bold tracking-[-0.04em] md:text-[3rem]">
-        {post.data.title}
-      </h1>
-      <div class="flex items-center gap-4 text-sm text-muted-foreground">
-        <time datetime={post.data.publishDate.toISOString()}>
-          {post.data.publishDate.toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-          })}
-        </time>
-      </div>
-      <div
-        class="mt-8 max-w-3xl text-[1.02rem] leading-8 text-foreground
-          [&_a]:underline
-          [&_code]:border [&_code]:border-foreground/20 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[0.92em]
-          [&_h2]:mt-10 [&_h2]:mb-4 [&_h2]:text-2xl [&_h2]:leading-tight [&_h2]:font-bold [&_h2]:tracking-[-0.04em]
-          [&_h3]:mt-8 [&_h3]:mb-3 [&_h3]:text-xl [&_h3]:leading-tight [&_h3]:font-bold [&_h3]:tracking-[-0.03em]
-          [&_ol]:my-5 [&_ol]:list-decimal [&_ol]:space-y-3 [&_ol]:pl-5
-          [&_p]:my-5
-          [&_pre]:my-6 [&_pre]:overflow-x-auto [&_pre]:border [&_pre]:border-foreground/20 [&_pre]:p-4
-          [&_ul]:my-5 [&_ul]:list-disc [&_ul]:space-y-3 [&_ul]:pl-5"
-      >
-        <Content />
-      </div>
-    </article>
-  </main>
+  <div class="flex">
+    <main class="flex-1">
+      <article class="border-t border-foreground/20 px-6 py-8 md:px-8 md:py-10">
+        <a class="text-sm text-muted-foreground" href="/blog/">Back to blog</a>
+        <h1 class="mt-4 mb-2 text-[2.25rem] leading-none font-bold tracking-[-0.04em] md:text-[3rem]">
+          {post.data.title}
+        </h1>
+        <div class="flex items-center gap-4 text-sm text-muted-foreground">
+          <time datetime={post.data.publishDate.toISOString()}>
+            {post.data.publishDate.toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            })}
+          </time>
+        </div>
+        <div class="mt-8 max-w-3xl prose prose-neutral dark:prose-invert
+          prose-headings:font-bold prose-headings:tracking-[-0.04em]
+          prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-2xl prose-h2:scroll-mt-24
+          prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-xl prose-h3:scroll-mt-24
+          prose-code:border prose-code:border-foreground/20 prose-code:px-1 prose-code:py-0.5
+          prose-pre:border prose-pre:border-foreground/20 prose-pre:p-4
+          prose-a:underline
+        ">
+          <Content />
+        </div>
+      </article>
+    </main>
+    {headings.length > 0 && (
+      <aside class="hidden lg:block w-64 shrink-0 border-t border-foreground/20 py-8 pr-8">
+        <nav class="sticky top-8">
+          <h4 class="mb-4 text-sm font-semibold text-muted-foreground">On this page</h4>
+          <ul class="space-y-2 text-sm" id="toc-list">
+            {headings.map((heading) => (
+              <li>
+                <a
+                  href={`#${heading.slug}`}
+                  data-heading={heading.slug}
+                  class:list={[
+                    "block text-muted-foreground hover:text-foreground transition-colors border-l-3 border-transparent pl-3 -ml-px",
+                    heading.depth === 3 && "pl-7",
+                  ]}
+                >
+                  {heading.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <script>
+          const tocLinks = document.querySelectorAll('#toc-list a[data-heading]');
+          const headings = Array.from(tocLinks).map(link => {
+            const slug = link.getAttribute('data-heading');
+            return document.getElementById(slug ?? '');
+          }).filter(Boolean);
+
+          if (tocLinks.length && headings.length) {
+            const observer = new IntersectionObserver((entries) => {
+              entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                  tocLinks.forEach(link => {
+                    link.classList.remove('border-foreground', 'text-foreground');
+                    link.classList.add('border-transparent', 'text-muted-foreground');
+                  });
+                  const activeLink = document.querySelector(`a[data-heading="${entry.target.id}"]`);
+                  if (activeLink) {
+                    activeLink.classList.remove('border-transparent', 'text-muted-foreground');
+                    activeLink.classList.add('border-foreground', 'text-foreground');
+                  }
+                }
+              });
+            }, { rootMargin: '-24px 0px -80% 0px' });
+
+            headings.forEach(heading => heading && observer.observe(heading));
+          }
+        </script>
+      </aside>
+    )}
+  </div>
 </BaseLayout>

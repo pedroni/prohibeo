@@ -1,0 +1,34 @@
+---
+import { icon } from '@fortawesome/fontawesome-svg-core';
+import { faHeart } from '@fortawesome/free-solid-svg-icons';
+
+interface Props {
+  class?: string;
+  label?: string;
+  text?: string;
+  showText?: boolean;
+}
+
+const {
+  class: className = '',
+  label = 'Support Prohibeo',
+  text = 'Sponsor',
+  showText = false,
+} = Astro.props;
+const sponsorUrl = 'https://github.com/sponsors/pedroni?frequency=one-time';
+const heartHtml = icon(faHeart, {
+  classes: ['h-4', 'w-4'],
+  attributes: {
+    'aria-hidden': 'true',
+  },
+}).html.join('');
+---
+
+<a
+  aria-label={label}
+  class={`group inline-flex shrink-0 items-center leading-none ${showText ? 'gap-2' : 'justify-center'} ${className}`}
+  href={sponsorUrl}
+>
+  <span class="text-rose-500! transition-opacity group-hover:opacity-80" set:html={heartHtml} />
+  {showText && <span>{text}</span>}
+</a>

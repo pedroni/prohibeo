@@ -1,0 +1,31 @@
+---
+import { icon } from '@fortawesome/fontawesome-svg-core';
+import { faGithub } from '@fortawesome/free-brands-svg-icons';
+
+interface Props {
+  class?: string;
+  label?: string;
+  text?: string;
+  showText?: boolean;
+}
+
+const {
+  class: className = '',
+  label = 'GitHub repository',
+  text = 'GitHub',
+  showText = true,
+} = Astro.props;
+
+const repoUrl = 'https://github.com/pedroni/prohibeo';
+const githubHtml = icon(faGithub, {
+  classes: ['h-4', 'w-4'],
+  attributes: {
+    'aria-hidden': 'true',
+  },
+}).html.join('');
+---
+
+<a aria-label={label} class={`inline-flex items-center gap-2 ${className}`} href={repoUrl}>
+  <span set:html={githubHtml} />
+  {showText && <span>{text}</span>}
+</a>

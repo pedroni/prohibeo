@@ -3,8 +3,8 @@ import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { Button } from "@ui/Button";
 import GridBox from "../components/GridBox.astro";
-import InlineCode from "../components/InlineCode.astro";
 import SectionIntro from "../components/SectionIntro.astro";
+import SponsorHeartLink from "../components/SponsorHeartLink.astro";
 import SectionTitle from "../components/SectionTitle.astro";
 
 const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
@@ -13,41 +13,51 @@ const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
 ---
 
 <BaseLayout
-    title="Prohibeo | Block distracting sites and reclaim your focus"
-    description="Prohibeo is a Chrome extension for blocking distracting websites, scheduling focus time, and hiding the parts of a page that steal your attention."
+    title="Prohibeo | Block distractions and calm your browser"
+    description="Prohibeo is a Chrome focus tool for blocking distracting sites, running focus schedules, and hiding noisy parts of pages without making the web harder to use."
     pathname="/"
 >
     <main>
         <section>
             <div class="grid grid-cols-1 md:grid-cols-2">
                 <div
-                    class="border-b border-foreground/20 px-6 py-10 md:border-r md:border-b-0 md:px-8 md:py-12"
+                    class="border-foreground/20 px-6 py-10 md:border-r md:border-b-0 md:px-8 md:py-12"
                 >
                     <span
                         class="inline-flex border border-foreground/20 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em]"
                     >
-                        Minimal focus tools for Chrome
+                        Chrome focus tool for calmer browsing
                     </span>
-                    <h1
-                        class="mt-6 text-5xl font-bold md:text-6xl"
-                    >
-                        Block distractions without fighting your browser.
+                    <h1 class="mt-6 text-5xl font-bold md:text-6xl">
+                        Block distractions without turning the web into a fight.
                     </h1>
                     <p
                         class="mt-4 max-w-2xl text-base leading-7 text-muted-foreground"
                     >
-                        Prohibeo helps you block websites, schedule focused
-                        time, and hide the noisy parts of sites like YouTube so
-                        you can stay on task.
+                        Prohibeo is a simple Chrome focus tool that helps you
+                        stay with what matters. Block distracting sites, run
+                        schedules that match your day, and hide the noisy parts
+                        of pages you still want to use - all privately on your
+                        device.
                     </p>
                     <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-                        <Button href="#install" size="lg">
-                            See install options
+                        <Button
+                            href="https://chromewebstore.google.com/category/extensions"
+                            size="lg"
+                        >
+                            Add Prohibeo to Chrome
                         </Button>
-                        <Button href="/blog/" size="lg" variant="secondary">
-                            Read the blog
+                        <Button href="#features" size="lg" variant="secondary">
+                            See how it works
                         </Button>
                     </div>
+                    <p
+                        class="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground"
+                    >
+                        Free to use. If it helps, a little
+                        <SponsorHeartLink class="align-middle" />
+                        is always appreciated.
+                    </p>
                 </div>
 
                 <div class="px-6 py-10 md:px-8 md:py-12">
@@ -99,95 +109,142 @@ const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
                     </div>
                 </div>
             </div>
-            <div
-                class="grid grid-cols-1 border-t border-foreground/20 pl-px pt-px md:grid-cols-3"
-            >
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-3">
+            <GridBox>
+                <strong class="mb-2 block text-2xl tracking-[-0.04em]"
+                    >Made for Chrome</strong
+                >
+                <span class="text-sm leading-6 text-muted-foreground">
+                    Lightweight to install, easy to adjust, and built for
+                    everyday browsing
+                </span>
+            </GridBox>
+            <GridBox>
+                <strong class="mb-2 block text-2xl tracking-[-0.04em]"
+                    >Flexible blocking</strong
+                >
+                <span class="text-sm leading-6 text-muted-foreground">
+                    Block full sites, set schedules, or remove the parts of a
+                    page that pull you off track
+                </span>
+            </GridBox>
                 <GridBox>
                     <strong class="mb-2 block text-2xl tracking-[-0.04em]"
-                        >2 modes</strong
+                        >Private and secure</strong
                     >
                     <span class="text-sm leading-6 text-muted-foreground">
-                        Always block or scheduled blocking
+                        No tracking, no analytics, no account system. Your
+                        rules stay local in Chrome.
                     </span>
                 </GridBox>
-                <GridBox>
-                    <strong class="mb-2 block text-2xl tracking-[-0.04em]"
-                        >Fine control</strong
-                    >
-                    <span class="text-sm leading-6 text-muted-foreground">
-                        Hide comments, shorts, sidebars, and more
-                    </span>
+        </div>
+        <section id="who-its-for">
+            <SectionIntro>
+                <SectionTitle>Built for real attention</SectionTitle>
+                <p class="text-base leading-7 text-muted-foreground">
+                    Prohibeo is for people who want a little more control over
+                    their online habits without turning the day into a strict
+                    productivity system. Whether you are working, studying, or
+                    just trying to stay with one thing a bit longer, it helps
+                    make fewer distractions the default.
+                </p>
+            </SectionIntro>
+            <div class="grid grid-cols-1 pl-px pt-px md:grid-cols-3">
+                <GridBox as="article">
+                    <h3 class="mb-4 text-lg font-semibold">
+                        For busy professionals
+                    </h3>
+                    <p class="text-sm leading-6 text-muted-foreground">
+                        When your work happens in the browser, it is easy to
+                        lose time to tabs you never meant to open. Prohibeo
+                        helps protect focus during the parts of the day that
+                        need your full attention, without adding friction to
+                        everything else.
+                    </p>
                 </GridBox>
-                <GridBox>
-                    <strong class="mb-2 block text-2xl tracking-[-0.04em]"
-                        >Local-first</strong
-                    >
-                    <span class="text-sm leading-6 text-muted-foreground">
-                        Settings stay in your Chrome profile
-                    </span>
+                <GridBox as="article">
+                    <h3 class="mb-4 text-lg font-semibold">
+                        For days when focus is harder to hold
+                    </h3>
+                    <p class="text-sm leading-6 text-muted-foreground">
+                        If you have ADHD, or if online distractions pull you
+                        away faster than you would like, Prohibeo can make your
+                        environment feel a little calmer and more intentional.
+                        It is not a fix, just a practical way to reduce some of
+                        the easy detours that break momentum.
+                    </p>
+                </GridBox>
+                <GridBox as="article">
+                    <h3 class="mb-4 text-lg font-semibold">
+                        For students and creators
+                    </h3>
+                    <p class="text-sm leading-6 text-muted-foreground">
+                        Deep work is hard when entertainment, messages, and side
+                        quests are always one click away. Prohibeo helps you
+                        stay with the assignment, draft, edit, or idea in front
+                        of you long enough to actually make progress.
+                    </p>
                 </GridBox>
             </div>
         </section>
 
         <section class="border-t border-foreground/20" id="features">
             <SectionIntro>
-                <SectionTitle>
-                    Everything you need for a low-friction focus setup
-                </SectionTitle>
+                <SectionTitle>Made to help, not nag</SectionTitle>
                 <p class="text-base leading-7 text-muted-foreground">
-                    Prohibeo keeps the workflow simple: add a site, choose how
-                    strict you want to be, and trim away the distracting
-                    sections that still slip through.
+                    Prohibeo keeps the basics simple: block the sites that pull
+                    you off track, choose when the rules apply, and make noisy
+                    pages feel quieter. It is a lightweight tool built to be
+                    useful every day, without turning focus into a bigger
+                    project.
                 </p>
             </SectionIntro>
-            <div class="grid grid-cols-1 pl-px pt-px md:grid-cols-3">
+            <div class="grid grid-cols-1 pl-px pt-px md:grid-cols-2">
                 <GridBox as="article">
                     <h3 class="mb-4 text-lg font-semibold">
-                        Block entire sites
+                        Block the sites you mean to avoid
                     </h3>
-                    <ul
-                        class="list-disc space-y-3 pl-5 text-sm leading-6 text-muted-foreground"
-                    >
-                        <li>
-                            Add domains like <InlineCode>youtube.com</InlineCode> or full URLs.
-                        </li>
-                        <li>Apply rules across subdomains automatically.</li>
-                        <li>
-                            Show a blocked-state screen when a site is fully
-                            blocked.
-                        </li>
-                    </ul>
+                    <p class="text-sm leading-6 text-muted-foreground">
+                        Choose the sites that tend to derail your day, and
+                        Prohibeo gets out of the way until you need it. No
+                        complicated setup, just a clear boundary when your
+                        attention needs one.
+                    </p>
                 </GridBox>
                 <GridBox as="article">
                     <h3 class="mb-4 text-lg font-semibold">
-                        Choose when blocking applies
+                        Set a schedule that fits real life
                     </h3>
-                    <ul
-                        class="list-disc space-y-3 pl-5 text-sm leading-6 text-muted-foreground"
-                    >
-                        <li>
-                            Switch between always-on and scheduled blocking.
-                        </li>
-                        <li>Select weekdays and focus hours.</li>
-                        <li>
-                            Keep rules flexible without adding extra complexity.
-                        </li>
-                    </ul>
+                    <p class="text-sm leading-6 text-muted-foreground">
+                        Create focus hours that match how you actually work,
+                        whether that is weekdays, study sessions, or a small
+                        evening reset. You decide when blocking turns on, so it
+                        supports your routine instead of fighting it.
+                    </p>
                 </GridBox>
                 <GridBox as="article">
                     <h3 class="mb-4 text-lg font-semibold">
-                        Hide the noisy parts instead
+                        Clean up pages that are designed to pull you in
                     </h3>
-                    <ul
-                        class="list-disc space-y-3 pl-5 text-sm leading-6 text-muted-foreground"
-                    >
-                        <li>Use built-in YouTube section controls.</li>
-                        <li>Add your own CSS selectors for custom cleanup.</li>
-                        <li>
-                            Keep the useful parts of a page while removing
-                            rabbit holes.
-                        </li>
-                    </ul>
+                    <p class="text-sm leading-6 text-muted-foreground">
+                        Hide distracting parts of cluttered sites, including
+                        YouTube elements that make "one quick video" harder to
+                        keep quick. It is a gentler option when you do not want
+                        to block a site completely, just make it less grabby.
+                    </p>
+                </GridBox>
+                <GridBox as="article">
+                    <h3 class="mb-4 text-lg font-semibold">
+                        Lightweight, open, and easy to reach
+                    </h3>
+                    <p class="text-sm leading-6 text-muted-foreground">
+                        Prohibeo is meant to stay small, understandable, and
+                        genuinely useful. It is an open project, and if
+                        something feels off or missing, you can reach out like a
+                        person, not a ticket number.
+                    </p>
                 </GridBox>
             </div>
         </section>
@@ -196,30 +253,27 @@ const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
             <div class="px-6 py-8 md:px-8 md:py-10">
                 <div class="grid gap-4">
                     <div class="max-w-3xl">
-                        <SectionTitle>Install Prohibeo</SectionTitle>
+                        <SectionTitle
+                            >Make your browser a little quieter</SectionTitle
+                        >
                         <p class="text-base leading-7 text-muted-foreground">
-                            Prohibeo is currently easiest to try as a local
-                            Chrome extension build. When a Chrome Web Store
-                            listing is available, you can swap in that link here
-                            without changing the site structure.
+                            Prohibeo helps you block the sites that pull you off
+                            course, without turning your day into a battle of
+                            willpower. Set your rules once, keep your browsing
+                            calm, and let your browser do less of the tempting.
                         </p>
                     </div>
-                    <ol
-                        class="list-decimal space-y-3 pl-5 text-sm leading-6 text-muted-foreground"
-                    >
-                        <li>
-                            Run <InlineCode>npm install</InlineCode> in the repo root.
-                        </li>
-                        <li>
-                            Run <InlineCode>npm run build</InlineCode> to generate the extension in <InlineCode>dist/</InlineCode>.
-                        </li>
-                        <li>
-                            Open <InlineCode>chrome://extensions</InlineCode> and enable Developer mode.
-                        </li>
-                        <li>
-                            Choose <strong>Load unpacked</strong> and select the generated <InlineCode>dist/</InlineCode> folder.
-                        </li>
-                    </ol>
+                    <div class="flex flex-col gap-3 sm:flex-row">
+                        <Button
+                            href="https://chromewebstore.google.com/category/extensions"
+                            size="lg"
+                        >
+                            Add Prohibeo to Chrome
+                        </Button>
+                        <Button href="/blog/" size="lg" variant="secondary">
+                            Read the blog
+                        </Button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -228,19 +282,21 @@ const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
             <div class="px-6 py-8 md:px-8 md:py-10">
                 <div class="grid gap-4">
                     <div class="max-w-3xl">
-                        <SectionTitle>Privacy by default</SectionTitle>
+                        <SectionTitle>Private by design</SectionTitle>
                         <p class="text-base leading-7 text-muted-foreground">
-                            Prohibeo stores your settings in <InlineCode>chrome.storage.local</InlineCode>,
-                            so your website rules stay in your browser
-                            profile on your machine.
+                            Prohibeo runs locally in your browser. The rules you
+                            create stay on your device. There are no tracking
+                            scripts, no analytics, and no account system sitting
+                            behind the product.
                         </p>
                     </div>
                     <ul
                         class="list-disc space-y-3 pl-5 text-sm leading-6 text-muted-foreground"
                     >
-                        <li>No account system</li>
-                        <li>No billing or upgrade flow</li>
-                        <li>No cloud sync in the current version</li>
+                        <li>Rules are stored locally in Chrome</li>
+                        <li>No accounts, logins, or cloud sync</li>
+                        <li>No analytics or tracking</li>
+                        <li>No data leaves the extension for app features</li>
                     </ul>
                 </div>
             </div>
@@ -250,32 +306,40 @@ const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
             <SectionIntro>
                 <SectionTitle>Latest from the blog</SectionTitle>
                 <p class="text-base leading-7 text-muted-foreground">
-                    Use MDX posts for product updates, focus tips, release
-                    notes, or Chrome Web Store launch announcements.
+                    Notes on calmer browsing, better focus habits, and small
+                    ways to make the internet less interruptive - plus product
+                    updates as Prohibeo grows.
                 </p>
             </SectionIntro>
-            {latestPost && (
-                <div class="grid grid-cols-1 pl-px pt-px">
-                    <GridBox as="article">
-                        <time
-                            class="block text-sm text-muted-foreground"
-                            datetime={latestPost.data.publishDate.toISOString()}
-                        >
-                            {latestPost.data.publishDate.toLocaleDateString("en-US", {
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric",
-                            })}
-                        </time>
-                        <h3 class="mt-3 mb-3 text-lg font-semibold">
-                            <a href={`/blog/${latestPost.id}/`}>{latestPost.data.title}</a>
-                        </h3>
-                        <p class="max-w-2xl text-sm leading-6 text-muted-foreground">
-                            {latestPost.data.description}
-                        </p>
-                    </GridBox>
-                </div>
-            )}
+            {
+                latestPost && (
+                    <div class="grid grid-cols-1 pl-px pt-px">
+                        <GridBox as="article">
+                            <time
+                                class="block text-sm text-muted-foreground"
+                                datetime={latestPost.data.publishDate.toISOString()}
+                            >
+                                {latestPost.data.publishDate.toLocaleDateString(
+                                    "en-US",
+                                    {
+                                        month: "long",
+                                        day: "numeric",
+                                        year: "numeric",
+                                    },
+                                )}
+                            </time>
+                            <h3 class="mt-3 mb-3 text-lg font-semibold">
+                                <a href={`/blog/${latestPost.id}/`}>
+                                    {latestPost.data.title}
+                                </a>
+                            </h3>
+                            <p class="max-w-2xl text-sm leading-6 text-muted-foreground">
+                                {latestPost.data.description}
+                            </p>
+                        </GridBox>
+                    </div>
+                )
+            }
         </section>
     </main>
 </BaseLayout>
