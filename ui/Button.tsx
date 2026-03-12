@@ -5,7 +5,7 @@ import type {
 } from 'react'
 
 type ButtonVariant = 'primary' | 'secondary'
-type ButtonSize = 'md' | 'lg' | 'xs'
+type ButtonSize = 'md' | 'lg' | 'xs' | 'icon'
 
 type CommonButtonProps = {
   children: ReactNode
@@ -38,7 +38,9 @@ function getButtonClassName(
       ? 'px-4 py-3 text-sm'
       : size === 'xs'
         ? 'min-w-12 px-3 py-2 text-xs'
-        : 'px-3 py-2 text-sm'
+        : size === 'icon'
+          ? 'h-9 w-9'
+          : 'px-3 py-2 text-sm'
 
   return `inline-flex items-center justify-center gap-2 border font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${variantClassName} ${sizeClassName}`
 }

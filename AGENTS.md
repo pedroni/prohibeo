@@ -169,3 +169,23 @@ When making future changes:
 5. Preserve the minimal, square, bordered design language
 
 If a component starts requiring repeated caller-side styling, that is a signal to improve the shared component API.
+
+## List and row conventions
+
+When rendering a repeated list of items (e.g. schedules, selectors, rules), use a top-border separator between rows rather than boxing each item individually.
+
+- Use `border-t border-foreground/20` on each row
+- No horizontal padding (`px-*`) on the rows themselves; let the parent section provide horizontal spacing
+- Vertical padding (`py-*`) on each row for breathing room
+
+Avoid wrapping each list item in its own full border box.
+
+## Data format and compatibility
+
+Only support the current data format. Do not write migration paths or backwards-compatibility shims for old storage shapes.
+
+When a data structure changes, update the parser to expect the new shape and drop legacy handling. The product targets new users going forward.
+
+## Logic conventions
+
+For any condition that drives a significant behavior (e.g. whether a site is blocked), there should be a single authoritative function that returns a boolean. All call sites use that function — do not re-implement or inline the check elsewhere.

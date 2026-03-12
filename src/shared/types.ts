@@ -31,6 +31,11 @@ export type StrictSchedule = {
   endHour: number
 }
 
+export type NamedSchedule = StrictSchedule & {
+  id: string
+  name: string
+}
+
 export type PresetToggles = Partial<Record<PresetOptionKey, boolean>>
 
 export type SiteRule = {
@@ -38,7 +43,7 @@ export type SiteRule = {
   domain: string
   enabled: boolean
   blockingMode: BlockingMode
-  schedule: StrictSchedule
+  schedules: NamedSchedule[]
   presetToggles: PresetToggles
   customSelectors: string[]
   createdAt: string

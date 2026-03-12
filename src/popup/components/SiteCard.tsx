@@ -1,73 +1,79 @@
-import { faXTwitter, faYoutube } from '@fortawesome/free-brands-svg-icons'
-import { faGear, faGlobe, faXmark } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXTwitter, faYoutube } from "@fortawesome/free-brands-svg-icons";
+import { faGear, faGlobe, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { getEnabledPresetLabels, usesSectionHidingOnly } from '../../shared/presets'
-import { formatScheduleSummary, isSiteRuleBlockingNow } from '../../shared/schedule'
-import type { SiteRule } from '../../shared/types'
+import { Button } from "../../../ui/Button";
+import {
+  getEnabledPresetLabels,
+  usesSectionHidingOnly,
+} from "../../shared/presets";
+import { isSiteRuleBlockingNow } from "../../shared/schedule";
+import type { SiteRule } from "../../shared/types";
 
 type SiteCardProps = {
-  rule: SiteRule
-  onEdit: () => void
-  onRemove: () => void
-}
+  rule: SiteRule;
+  onEdit: () => void;
+  onRemove: () => void;
+};
 
 function getSiteIcon(domain: string) {
-  if (domain === 'youtube.com') {
-    return faYoutube
+  if (domain === "youtube.com") {
+    return faYoutube;
   }
 
-  if (domain === 'x.com' || domain === 'twitter.com') {
-    return faXTwitter
+  if (domain === "x.com" || domain === "twitter.com") {
+    return faXTwitter;
   }
 
-  return faGlobe
+  return faGlobe;
 }
 
 export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
-  const enabledPresetLabels = getEnabledPresetLabels(rule)
-  const selectorCount = rule.customSelectors.length
-  const blockingNow = isSiteRuleBlockingNow(rule)
-  const sectionOnlyRule = usesSectionHidingOnly(rule.domain)
+  const enabledPresetLabels = getEnabledPresetLabels(rule);
+  const selectorCount = rule.customSelectors.length;
+  const blockingNow = isSiteRuleBlockingNow(rule);
+  const sectionOnlyRule = usesSectionHidingOnly(rule.domain);
 
   return (
     <article className="border border-foreground/20 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-9 w-9 items-center justify-center border border-foreground/20">
+          <div className="flex items-start gap-3">
+            <span className="inline-flex shrink-0 h-9 w-9!  items-center justify-center border border-foreground/20">
               <FontAwesomeIcon icon={getSiteIcon(rule.domain)} />
             </span>
             <div className="min-w-0">
               <h2 className="truncate text-lg font-bold">{rule.domain}</h2>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {rule.blockingMode === 'always'
-                  ? sectionOnlyRule
-                    ? 'Sections hidden'
-                    : 'Always blocked'
-                  : `Scheduled • ${formatScheduleSummary(rule.schedule)}`}
+                {sectionOnlyRule && !rule.enabled
+                  ? "Sections hidden"
+                  : rule.blockingMode === "always"
+                    ? "Always blocked"
+                    : rule.schedules.length === 0
+                    ? "Scheduled • No schedules"
+                    : rule.schedules.length === 1
+                      ? `Scheduled • ${rule.schedules[0].name}`
+                      : `Scheduled • ${rule.schedules.length} schedules`}
               </p>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <Button
+            size="icon"
             aria-label={`Edit ${rule.domain}`}
             onClick={onEdit}
-            className="inline-flex h-9 w-9 items-center justify-center border border-foreground/20"
           >
             <FontAwesomeIcon icon={faGear} />
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            size="icon"
             aria-label={`Remove ${rule.domain}`}
             onClick={onRemove}
-            className="inline-flex h-9 w-9 items-center justify-center border border-foreground/20"
           >
             <FontAwesomeIcon icon={faXmark} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -75,31 +81,28 @@ export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
         <span
           className={`border px-2 py-1 text-xs font-semibold ${
             blockingNow
-              ? 'border-foreground bg-foreground text-background'
-              : 'border-foreground/20 bg-background text-foreground'
+              ? "border-foreground bg-foreground text-background"
+              : "border-foreground/20 bg-background text-foreground"
           }`}
         >
-          {blockingNow
-            ? sectionOnlyRule
-              ? 'Hiding now'
-              : 'Blocking now'
-            : sectionOnlyRule
-              ? 'Not hiding now'
-              : 'Not blocking now'}
+          {blockingNow ? "Blocking now" : "Not blocking now"}
         </span>
 
         {enabledPresetLabels.map((label) => (
-          <span key={label} className="border border-foreground/20 px-2 py-1 text-xs font-semibold">
+          <span
+            key={label}
+            className="border border-foreground/20 px-2 py-1 text-xs font-semibold"
+          >
             {label}
           </span>
         ))}
 
         {selectorCount > 0 ? (
           <span className="border border-foreground/20 px-2 py-1 text-xs font-semibold">
-            {selectorCount} selector{selectorCount === 1 ? '' : 's'}
+            {selectorCount} selector{selectorCount === 1 ? "" : "s"}
           </span>
         ) : null}
       </div>
     </article>
-  )
+  );
 }

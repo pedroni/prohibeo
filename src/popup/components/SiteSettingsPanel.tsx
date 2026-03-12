@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { faArrowLeft, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faPencil, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import {
@@ -8,11 +8,18 @@ import {
   usesSectionHidingOnly,
 } from '../../shared/presets'
 import {
+  DEFAULT_SCHEDULE,
   WEEKDAY_LABELS,
   formatHourLabel,
   formatScheduleSummary,
 } from '../../shared/schedule'
-import { WEEKDAY_ORDER, type BlockingMode, type SiteRule, type Weekday } from '../../shared/types'
+import {
+  WEEKDAY_ORDER,
+  type BlockingMode,
+  type NamedSchedule,
+  type SiteRule,
+  type Weekday,
+} from '../../shared/types'
 
 import { Button } from '@ui/Button'
 import { TextInput } from '@ui/TextInput'
@@ -25,6 +32,20 @@ type SiteSettingsPanelProps = {
 }
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => hour)
+
+interface NewScheduleForm {
+  name: string
+  weekdays: Weekday[]
+  startHour: number
+  endHour: number
+}
+
+const EMPTY_SCHEDULE_FORM: NewScheduleForm = {
+  name: '',
+  weekdays: [...DEFAULT_SCHEDULE.weekdays],
+  startHour: DEFAULT_SCHEDULE.startHour,
+  endHour: DEFAULT_SCHEDULE.endHour,
+}
 
 function isValidSelector(selector: string): boolean {
   try {
@@ -42,6 +63,10 @@ export function SiteSettingsPanel({
 }: SiteSettingsPanelProps) {
   const [selectorInput, setSelectorInput] = useState('')
   const [selectorError, setSelectorError] = useState<string | null>(null)
+  const [isAddingSchedule, setIsAddingSchedule] = useState(false)
+  const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null)
+  const [newSchedule, setNewSchedule] = useState<NewScheduleForm>(EMPTY_SCHEDULE_FORM)
+  const [scheduleNameError, setScheduleNameError] = useState<string | null>(null)
 
   const presetLabel = getPresetDisplayName(rule.domain)
   const presetOptions = useMemo(() => getPresetOptionsForDomain(rule.domain), [rule.domain])
@@ -58,32 +83,7 @@ export function SiteSettingsPanel({
     updateRule({
       ...rule,
       blockingMode,
-    })
-  }
-
-  function toggleWeekday(weekday: Weekday): void {
-    const nextWeekdays = rule.schedule.weekdays.includes(weekday)
-      ? rule.schedule.weekdays.filter((value) => value !== weekday)
-      : [...rule.schedule.weekdays, weekday].sort(
-          (left, right) => WEEKDAY_ORDER.indexOf(left) - WEEKDAY_ORDER.indexOf(right),
-        )
-
-    updateRule({
-      ...rule,
-      schedule: {
-        ...rule.schedule,
-        weekdays: nextWeekdays,
-      },
-    })
-  }
-
-  function updateHour(field: 'startHour' | 'endHour', value: string): void {
-    updateRule({
-      ...rule,
-      schedule: {
-        ...rule.schedule,
-        [field]: Number(value),
-      },
+      enabled: blockingMode === 'always' ? true : rule.enabled,
     })
   }
 
@@ -94,6 +94,80 @@ export function SiteSettingsPanel({
         ...rule.presetToggles,
         [optionKey]: !rule.presetToggles[optionKey],
       },
+    })
+  }
+
+  function toggleNewScheduleWeekday(weekday: Weekday): void {
+    setNewSchedule((prev) => ({
+      ...prev,
+      weekdays: prev.weekdays.includes(weekday)
+        ? prev.weekdays.filter((w) => w !== weekday)
+        : [...prev.weekdays, weekday].sort(
+            (a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b),
+          ),
+    }))
+  }
+
+  function handleSaveSchedule(): void {
+    const name = newSchedule.name.trim()
+
+    if (!name) {
+      setScheduleNameError('Enter a name for this schedule.')
+      return
+    }
+
+    if (editingScheduleId !== null) {
+      updateRule({
+        ...rule,
+        schedules: rule.schedules.map((s) =>
+          s.id === editingScheduleId
+            ? { ...s, name, weekdays: newSchedule.weekdays, startHour: newSchedule.startHour, endHour: newSchedule.endHour }
+            : s
+        ),
+      })
+      setEditingScheduleId(null)
+    } else {
+      const schedule: NamedSchedule = {
+        id: crypto.randomUUID(),
+        name,
+        weekdays: newSchedule.weekdays,
+        startHour: newSchedule.startHour,
+        endHour: newSchedule.endHour,
+      }
+      updateRule({
+        ...rule,
+        schedules: [...rule.schedules, schedule],
+      })
+      setIsAddingSchedule(false)
+    }
+
+    setNewSchedule(EMPTY_SCHEDULE_FORM)
+    setScheduleNameError(null)
+  }
+
+  function handleCancelSchedule(): void {
+    setNewSchedule(EMPTY_SCHEDULE_FORM)
+    setScheduleNameError(null)
+    setIsAddingSchedule(false)
+    setEditingScheduleId(null)
+  }
+
+  function handleEditSchedule(schedule: NamedSchedule): void {
+    setEditingScheduleId(schedule.id)
+    setNewSchedule({
+      name: schedule.name,
+      weekdays: [...schedule.weekdays],
+      startHour: schedule.startHour,
+      endHour: schedule.endHour,
+    })
+    setIsAddingSchedule(false)
+    setScheduleNameError(null)
+  }
+
+  function handleRemoveSchedule(id: string): void {
+    updateRule({
+      ...rule,
+      schedules: rule.schedules.filter((s) => s.id !== id),
     })
   }
 
@@ -149,12 +223,14 @@ export function SiteSettingsPanel({
       </header>
 
       <div className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
+
+        {/* Blocking mode */}
         <section className="space-y-3 border border-foreground/20 p-4">
           <div>
-            <h3 className="text-lg font-bold">{sectionOnlyRule ? 'Activation' : 'Blocking'}</h3>
+            <h3 className="text-lg font-bold">Blocking</h3>
             <p className="text-sm text-muted-foreground">
               {sectionOnlyRule
-                ? 'YouTube is never replaced with the Prohibeo block screen. These controls decide when its distracting sections are hidden.'
+                ? 'YouTube sections are hidden to reduce distractions. Switch to a strict schedule when needed.'
                 : 'New sites default to always blocked. Switch to a strict schedule when needed.'}
             </p>
           </div>
@@ -164,73 +240,237 @@ export function SiteSettingsPanel({
               variant={rule.blockingMode === 'always' ? 'primary' : 'secondary'}
               onClick={() => handleBlockingModeChange('always')}
             >
-              {sectionOnlyRule ? 'Always active' : 'Always block'}
+              Always block
             </Button>
             <Button
               variant={rule.blockingMode === 'scheduled' ? 'primary' : 'secondary'}
               onClick={() => handleBlockingModeChange('scheduled')}
             >
-              {sectionOnlyRule ? 'Scheduled activation' : 'Scheduled blocking'}
+              Scheduled blocking
             </Button>
           </div>
-
-          {rule.blockingMode === 'scheduled' ? (
-            <div className="space-y-4 border-t border-foreground/20 pt-4">
-              <div>
-                <p className="text-sm font-bold">Strict Mode weekdays</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {WEEKDAY_ORDER.map((weekday) => (
-                    <Button
-                      key={weekday}
-                      size="xs"
-                      variant={rule.schedule.weekdays.includes(weekday) ? 'primary' : 'secondary'}
-                      onClick={() => toggleWeekday(weekday)}
-                    >
-                      {WEEKDAY_LABELS[weekday]}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <label className="space-y-2 text-sm font-bold">
-                  <span>Start hour</span>
-                  <select
-                    value={rule.schedule.startHour}
-                    onChange={(event) => updateHour('startHour', event.target.value)}
-                    className="w-full border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
-                  >
-                    {HOUR_OPTIONS.map((hour) => (
-                      <option key={hour} value={hour}>
-                        {formatHourLabel(hour)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="space-y-2 text-sm font-bold">
-                  <span>End hour</span>
-                  <select
-                    value={rule.schedule.endHour}
-                    onChange={(event) => updateHour('endHour', event.target.value)}
-                    className="w-full border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
-                  >
-                    {HOUR_OPTIONS.map((hour) => (
-                      <option key={hour} value={hour}>
-                        {formatHourLabel(hour)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              <p className="text-sm font-semibold">
-                Current schedule: {formatScheduleSummary(rule.schedule)}
-              </p>
-            </div>
-          ) : null}
         </section>
 
+        {/* Schedules — separate section, only visible in scheduled mode */}
+        {rule.blockingMode === 'scheduled' ? (
+          <section className="space-y-3 border border-foreground/20 p-4">
+            <div>
+              <h3 className="text-lg font-bold">Schedules</h3>
+              <p className="text-sm text-muted-foreground">
+                Block this site during specific times. Each schedule can have its own name, days, and hours.
+              </p>
+            </div>
+
+            {rule.schedules.length === 0 && !isAddingSchedule ? (
+              <p className="text-sm text-muted-foreground">
+                No schedules yet. Add one to define when this site is blocked.
+              </p>
+            ) : null}
+
+            {/* Existing schedule rows */}
+            {rule.schedules.map((schedule) =>
+              editingScheduleId === schedule.id ? (
+                <div key={schedule.id} className="space-y-3 border-t border-foreground/20 pt-3">
+                  <div>
+                    <p className="mb-1 text-sm font-bold">Schedule name</p>
+                    <TextInput
+                      value={newSchedule.name}
+                      onChange={(e) => {
+                        setNewSchedule((prev) => ({ ...prev, name: e.target.value }))
+                        if (scheduleNameError) setScheduleNameError(null)
+                      }}
+                      placeholder="e.g. Deep Focus"
+                      autoComplete="off"
+                    />
+                    {scheduleNameError ? (
+                      <p className="mt-1 text-xs font-semibold text-foreground">{scheduleNameError}</p>
+                    ) : null}
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-sm font-bold">Days</p>
+                    <div className="flex justify-between">
+                      {WEEKDAY_ORDER.map((weekday) => (
+                        <Button
+                          key={weekday}
+                          size="xs"
+                          variant={newSchedule.weekdays.includes(weekday) ? 'primary' : 'secondary'}
+                          onClick={() => toggleNewScheduleWeekday(weekday)}
+                        >
+                          {WEEKDAY_LABELS[weekday]}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="space-y-1 text-sm font-bold">
+                      <span>Start hour</span>
+                      <select
+                        value={newSchedule.startHour}
+                        onChange={(e) =>
+                          setNewSchedule((prev) => ({ ...prev, startHour: Number(e.target.value) }))
+                        }
+                        className="w-full border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
+                      >
+                        {HOUR_OPTIONS.map((hour) => (
+                          <option key={hour} value={hour}>
+                            {formatHourLabel(hour)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="space-y-1 text-sm font-bold">
+                      <span>End hour</span>
+                      <select
+                        value={newSchedule.endHour}
+                        onChange={(e) =>
+                          setNewSchedule((prev) => ({ ...prev, endHour: Number(e.target.value) }))
+                        }
+                        className="w-full border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
+                      >
+                        {HOUR_OPTIONS.map((hour) => (
+                          <option key={hour} value={hour}>
+                            {formatHourLabel(hour)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="primary" onClick={handleSaveSchedule}>
+                      Save
+                    </Button>
+                    <Button variant="secondary" onClick={handleCancelSchedule}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  key={schedule.id}
+                  className="flex items-center justify-between gap-3 border-t border-foreground/20 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="font-bold">{schedule.name}</p>
+                    <p className="text-sm text-muted-foreground">{formatScheduleSummary(schedule)}</p>
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <button
+                      type="button"
+                      aria-label={`Edit ${schedule.name}`}
+                      onClick={() => handleEditSchedule(schedule)}
+                      className="inline-flex h-8 w-8 items-center justify-center border border-foreground/20 hover:bg-foreground/20"
+                    >
+                      <FontAwesomeIcon icon={faPencil} />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Remove ${schedule.name}`}
+                      onClick={() => handleRemoveSchedule(schedule.id)}
+                      className="inline-flex h-8 w-8 items-center justify-center border border-foreground/20 hover:bg-foreground/20"
+                    >
+                      <FontAwesomeIcon icon={faTrashCan} />
+                    </button>
+                  </div>
+                </div>
+              )
+            )}
+
+            {/* Add schedule form */}
+            {isAddingSchedule ? (
+              <div className="space-y-3 border-t border-foreground/20 pt-3">
+                <div>
+                  <p className="mb-1 text-sm font-bold">Schedule name</p>
+                  <TextInput
+                    value={newSchedule.name}
+                    onChange={(e) => {
+                      setNewSchedule((prev) => ({ ...prev, name: e.target.value }))
+                      if (scheduleNameError) setScheduleNameError(null)
+                    }}
+                    placeholder="e.g. Deep Focus"
+                    autoComplete="off"
+                  />
+                  {scheduleNameError ? (
+                    <p className="mt-1 text-xs font-semibold text-foreground">{scheduleNameError}</p>
+                  ) : null}
+                </div>
+
+                <div>
+                  <p className="mb-2 text-sm font-bold">Days</p>
+                  <div className="flex justify-between">
+                    {WEEKDAY_ORDER.map((weekday) => (
+                      <Button
+                        key={weekday}
+                        size="xs"
+                        variant={newSchedule.weekdays.includes(weekday) ? 'primary' : 'secondary'}
+                        onClick={() => toggleNewScheduleWeekday(weekday)}
+                      >
+                        {WEEKDAY_LABELS[weekday]}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="space-y-1 text-sm font-bold">
+                    <span>Start hour</span>
+                    <select
+                      value={newSchedule.startHour}
+                      onChange={(e) =>
+                        setNewSchedule((prev) => ({ ...prev, startHour: Number(e.target.value) }))
+                      }
+                      className="w-full border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
+                    >
+                      {HOUR_OPTIONS.map((hour) => (
+                        <option key={hour} value={hour}>
+                          {formatHourLabel(hour)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="space-y-1 text-sm font-bold">
+                    <span>End hour</span>
+                    <select
+                      value={newSchedule.endHour}
+                      onChange={(e) =>
+                        setNewSchedule((prev) => ({ ...prev, endHour: Number(e.target.value) }))
+                      }
+                      className="w-full border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
+                    >
+                      {HOUR_OPTIONS.map((hour) => (
+                        <option key={hour} value={hour}>
+                          {formatHourLabel(hour)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="primary" onClick={handleSaveSchedule}>
+                    Save
+                  </Button>
+                  <Button variant="secondary" onClick={handleCancelSchedule}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              editingScheduleId === null ? (
+                <Button onClick={() => setIsAddingSchedule(true)}>
+                  <FontAwesomeIcon icon={faPlus} />
+                  Add schedule
+                </Button>
+              ) : null
+            )}
+          </section>
+        ) : null}
+
+        {/* YouTube preset toggles */}
         {presetOptions.length > 0 ? (
           <section className="space-y-4 border border-foreground/20 p-4">
             <div>
@@ -246,7 +486,7 @@ export function SiteSettingsPanel({
               {presetOptions.map((option) => (
                 <div
                   key={option.key}
-                  className="flex items-start justify-between gap-3 border-t border-foreground/20 pt-4 first:border-t-0 first:pt-0"
+                  className="flex items-center justify-between gap-3 border-t border-foreground/20 pt-4 first:border-t-0 first:pt-0"
                 >
                   <div className="space-y-1">
                     <p className="font-bold">{option.label}</p>
@@ -263,6 +503,7 @@ export function SiteSettingsPanel({
           </section>
         ) : null}
 
+        {/* Custom CSS selectors */}
         <section className="space-y-4 border border-foreground/20 p-4">
           <div>
             <h3 className="text-lg font-bold">Custom selectors</h3>

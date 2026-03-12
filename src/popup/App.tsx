@@ -9,7 +9,7 @@ import type { SiteRule } from '../shared/types'
 import { Button } from '@ui/Button'
 import { SiteCard } from './components/SiteCard'
 import { SiteSettingsPanel } from './components/SiteSettingsPanel'
-import { TextInput } from '@ui/TextInput'
+import { SocialMediaCombobox } from './components/SocialMediaCombobox'
 
 function sortSiteRules(siteRules: SiteRule[]): SiteRule[] {
   return [...siteRules].sort((left, right) => left.createdAt.localeCompare(right.createdAt))
@@ -139,28 +139,31 @@ export default function App() {
           </div>
         </header>
 
-        <main className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+        {/* Form sits outside the scroll container so the combobox dropdown isn't clipped */}
+        <div className="space-y-3 px-4 py-4">
           <form onSubmit={handleAddWebsite} className="space-y-3 border border-foreground/20 p-4">
             <div>
               <h2 className="text-lg font-bold">Website to block</h2>
               <p className="text-sm text-muted-foreground">
-                Add a URL or domain. Most sites default to always blocked. YouTube
-                defaults to section hiding instead of full-page blocking.
+                Add a URL or domain. YouTube hides distracting sections while keeping
+                the site accessible. Other sites show a block screen.
               </p>
             </div>
 
+            {errorMessage ? (
+              <p className="text-sm font-semibold text-red-500">{errorMessage}</p>
+            ) : null}
+
             <div className="flex gap-2">
-              <TextInput
+              <SocialMediaCombobox
                 value={websiteInput}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  setWebsiteInput(event.target.value)
+                excludedDomains={siteRules.map((r) => r.domain)}
+                onChange={(value) => {
+                  setWebsiteInput(value)
                   if (errorMessage) {
                     setErrorMessage(null)
                   }
                 }}
-                placeholder="e.g. youtube.com"
-                autoComplete="off"
-                spellCheck={false}
               />
               <Button type="submit">
                 <FontAwesomeIcon icon={faPlus} />
@@ -168,43 +171,39 @@ export default function App() {
               </Button>
             </div>
           </form>
+        </div>
 
-          {errorMessage ? (
-            <p className="border border-foreground/20 px-3 py-2 text-sm font-semibold">{errorMessage}</p>
-          ) : null}
+        <main className="flex-1 space-y-3 overflow-y-auto px-4 pb-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold">Blocked websites</h2>
+            <p className="text-sm text-muted-foreground">
+              {siteRules.length} site{siteRules.length === 1 ? '' : 's'}
+            </p>
+          </div>
 
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">Blocked websites</h2>
+          {isLoading ? <p className="text-sm text-muted-foreground">Loading your settings...</p> : null}
+
+          {!isLoading && siteRules.length === 0 ? (
+            <div className="border border-foreground/20 p-4">
+              <p className="font-bold text-base">No websites added yet.</p>
               <p className="text-sm text-muted-foreground">
-                {siteRules.length} site{siteRules.length === 1 ? '' : 's'}
+                Add a domain to start blocking full pages or hiding specific sections.
               </p>
             </div>
+          ) : null}
 
-            {isLoading ? <p className="text-sm text-muted-foreground">Loading your settings...</p> : null}
-
-            {!isLoading && siteRules.length === 0 ? (
-              <div className="border border-foreground/20 p-4">
-                <p className="font-bold">No websites added yet.</p>
-                <p className="text-sm text-muted-foreground">
-                  Add a domain to start blocking full pages or hiding specific sections.
-                </p>
-              </div>
-            ) : null}
-
-            <div className="space-y-3">
-              {siteRules.map((siteRule) => (
-                <SiteCard
-                  key={siteRule.id}
-                  rule={siteRule}
-                  onEdit={() => setSelectedSiteRuleId(siteRule.id)}
-                  onRemove={() => {
-                    void handleRemoveSiteRule(siteRule.id)
-                  }}
-                />
-              ))}
-            </div>
-          </section>
+          <div className="space-y-3">
+            {siteRules.map((siteRule) => (
+              <SiteCard
+                key={siteRule.id}
+                rule={siteRule}
+                onEdit={() => setSelectedSiteRuleId(siteRule.id)}
+                onRemove={() => {
+                  void handleRemoveSiteRule(siteRule.id)
+                }}
+              />
+            ))}
+          </div>
         </main>
       </div>
 

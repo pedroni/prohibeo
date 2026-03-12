@@ -1,6 +1,6 @@
 import { findMatchingRule } from '../shared/domains'
 import { getEnabledPresetSelectors, usesSectionHidingOnly } from '../shared/presets'
-import { formatScheduleSummary, isSiteRuleBlockingNow } from '../shared/schedule'
+import { formatScheduleSummary, getActiveSchedules, isSiteRuleBlockingNow } from '../shared/schedule'
 import { getSiteRules, watchSiteRules } from '../shared/storage'
 import type { SiteRule } from '../shared/types'
 
@@ -110,11 +110,26 @@ const SHADOW_CSS = `
   }
 `
 
+function getBlockStatusText(rule: SiteRule): string {
+  if (rule.blockingMode === 'always') {
+    return 'This website is always blocked.'
+  }
+
+  const active = getActiveSchedules(rule)
+
+  if (active.length === 1) {
+    return `${active[0].name} — ${formatScheduleSummary(active[0])}`
+  }
+
+  if (active.length > 1) {
+    return active.map((s) => s.name).join(', ')
+  }
+
+  return 'This website is blocked.'
+}
+
 function applyBlockOverlay(rule: SiteRule): void {
-  const blockingSummary =
-    rule.blockingMode === 'always'
-      ? 'This website is always blocked.'
-      : `Strict mode is active right now: ${formatScheduleSummary(rule.schedule)}.`
+  const statusText = getBlockStatusText(rule)
 
   // If already showing, update text via shadow root (mode: 'open').
   const existing = document.getElementById(OVERLAY_ID)
@@ -122,7 +137,7 @@ function applyBlockOverlay(rule: SiteRule): void {
     const h1 = existing.shadowRoot.querySelector('h1')
     const status = existing.shadowRoot.querySelector('.status')
     if (h1) h1.textContent = `${rule.domain} is blocked`
-    if (status) status.textContent = blockingSummary
+    if (status) status.textContent = statusText
     return
   }
 
@@ -157,7 +172,7 @@ function applyBlockOverlay(rule: SiteRule): void {
 
   const status = document.createElement('p')
   status.className = 'status'
-  status.textContent = blockingSummary
+  status.textContent = statusText
 
   const hint = document.createElement('p')
   hint.textContent = 'Open the Prohibeo popup to change this rule.'

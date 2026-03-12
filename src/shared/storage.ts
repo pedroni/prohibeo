@@ -1,14 +1,13 @@
 import { getPresetOptionsForDomain, usesSectionHidingOnly } from './presets'
-import { DEFAULT_SCHEDULE } from './schedule'
 import {
   BLOCKING_MODES,
   WEEKDAY_ORDER,
   YOUTUBE_PRESET_KEYS,
   type BlockingMode,
+  type NamedSchedule,
   type PresetOptionKey,
   type PresetToggles,
   type SiteRule,
-  type StrictSchedule,
   type Weekday,
 } from './types'
 
@@ -41,15 +40,20 @@ function isPresetOptionKey(value: unknown): value is PresetOptionKey {
   )
 }
 
-function parseSchedule(value: unknown, index: number): StrictSchedule {
-  if (!isRecord(value) || !Array.isArray(value.weekdays)) {
-    throw new Error(`Stored schedule for site rule ${index + 1} is malformed.`)
+function parseNamedSchedule(value: unknown, ruleIndex: number): NamedSchedule {
+  if (
+    !isRecord(value) ||
+    typeof value.id !== 'string' ||
+    typeof value.name !== 'string' ||
+    !Array.isArray(value.weekdays)
+  ) {
+    throw new Error(`Stored named schedule for site rule ${ruleIndex + 1} is malformed.`)
   }
 
   const weekdays = value.weekdays
 
   if (!weekdays.every(isWeekday)) {
-    throw new Error(`Stored weekdays for site rule ${index + 1} are malformed.`)
+    throw new Error(`Stored weekdays in named schedule for site rule ${ruleIndex + 1} are malformed.`)
   }
 
   if (
@@ -60,11 +64,13 @@ function parseSchedule(value: unknown, index: number): StrictSchedule {
     value.endHour < 0 ||
     value.endHour > 23
   ) {
-    throw new Error(`Stored schedule hours for site rule ${index + 1} are malformed.`)
+    throw new Error(`Stored schedule hours in named schedule for site rule ${ruleIndex + 1} are malformed.`)
   }
 
   return {
-    weekdays: [...new Set(weekdays)],
+    id: value.id,
+    name: value.name,
+    weekdays: [...new Set(weekdays)] as Weekday[],
     startHour: value.startHour,
     endHour: value.endHour,
   }
@@ -110,12 +116,17 @@ function parseSiteRule(value: unknown, index: number): SiteRule {
     throw new Error(`Stored site rule ${index + 1} is malformed.`)
   }
 
+  // Parse schedules array, defaulting to empty if absent or not an array.
+  const schedules: NamedSchedule[] = Array.isArray(value.schedules)
+    ? value.schedules.map((s) => parseNamedSchedule(s, index))
+    : []
+
   return {
     id: value.id,
     domain: value.domain,
     enabled: value.enabled,
     blockingMode: value.blockingMode,
-    schedule: parseSchedule(value.schedule, index),
+    schedules,
     presetToggles: parsePresetToggles(value.presetToggles, index),
     customSelectors: value.customSelectors,
     createdAt: value.createdAt,
@@ -144,17 +155,14 @@ function createDefaultPresetToggles(domain: string): PresetToggles {
 
 export function createSiteRule(domain: string): SiteRule {
   const timestamp = new Date().toISOString()
+  const sectionOnlyRule = usesSectionHidingOnly(domain)
 
   return {
     id: crypto.randomUUID(),
     domain,
-    enabled: true,
-    blockingMode: 'always',
-    schedule: {
-      weekdays: [...DEFAULT_SCHEDULE.weekdays],
-      startHour: DEFAULT_SCHEDULE.startHour,
-      endHour: DEFAULT_SCHEDULE.endHour,
-    },
+    enabled: !sectionOnlyRule,
+    blockingMode: sectionOnlyRule ? 'scheduled' : 'always',
+    schedules: [],
     presetToggles: createDefaultPresetToggles(domain),
     customSelectors: [],
     createdAt: timestamp,

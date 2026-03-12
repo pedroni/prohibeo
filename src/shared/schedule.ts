@@ -1,4 +1,4 @@
-import type { SiteRule, StrictSchedule, Weekday } from './types'
+import type { NamedSchedule, SiteRule, StrictSchedule, Weekday } from './types'
 
 const JAVASCRIPT_DAY_TO_WEEKDAY: readonly Weekday[] = [
   'sun',
@@ -72,7 +72,15 @@ export function isSiteRuleBlockingNow(rule: SiteRule, at = new Date()): boolean 
     return true
   }
 
-  return isScheduleActive(rule.schedule, at)
+  return rule.schedules.some((schedule) => isScheduleActive(schedule, at))
+}
+
+export function getActiveSchedules(rule: SiteRule, at = new Date()): NamedSchedule[] {
+  if (!rule.enabled || rule.blockingMode !== 'scheduled') {
+    return []
+  }
+
+  return rule.schedules.filter((schedule) => isScheduleActive(schedule, at))
 }
 
 export function formatHourLabel(hour: number): string {
@@ -106,5 +114,5 @@ export function formatScheduleSummary(schedule: StrictSchedule): string {
     return `${formatWeekdaySummary(schedule.weekdays)} • All day`
   }
 
-  return `${formatWeekdaySummary(schedule.weekdays)} • ${formatHourLabel(schedule.startHour)}-${formatHourLabel(schedule.endHour)}`
+  return `${formatWeekdaySummary(schedule.weekdays)} • ${formatHourLabel(schedule.startHour)}–${formatHourLabel(schedule.endHour)}`
 }
