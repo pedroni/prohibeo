@@ -5,7 +5,8 @@ import { getSiteRules, watchSiteRules } from '../shared/storage'
 import type { SiteRule } from '../shared/types'
 
 const HIDE_STYLE_ID = 'prohibeo-hide-style'
-let activeBlockedRuleId: string | null = null
+const OVERLAY_ID = 'prohibeo-block-overlay'
+const SCROLL_LOCK_ID = 'prohibeo-scroll-lock'
 
 function getUniqueSelectors(rule: SiteRule): string[] {
   return [...new Set([...getEnabledPresetSelectors(rule), ...rule.customSelectors])]
@@ -50,127 +51,121 @@ function applyHideStyle(rule: SiteRule | undefined): void {
     .join('\n')
 }
 
-function buildBlockedMarkup(rule: SiteRule): string {
+function removeBlockOverlay(): void {
+  document.getElementById(OVERLAY_ID)?.remove()
+  document.getElementById(SCROLL_LOCK_ID)?.remove()
+}
+
+// Styles live inside a Shadow DOM — the page's CSS cannot pierce in.
+// Background is on .shell (the shadow "body") rather than :host so it reliably fills the space.
+const SHADOW_CSS = `
+  :host {
+    display: block;
+  }
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  .shell {
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #ffffff;
+    color: #000000;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    color-scheme: light dark;
+  }
+  .card {
+    width: min(480px, 100%);
+    border: 1px solid #000000;
+    padding: 24px;
+  }
+  .brand {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  h1 {
+    margin: 0 0 12px;
+    font-size: 32px;
+    line-height: 1.1;
+    font-weight: bold;
+  }
+  p {
+    margin: 0 0 12px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  @media (prefers-color-scheme: dark) {
+    .shell { background: #131313; color: #e6e6e6; }
+    .card { border-color: #525252; }
+  }
+`
+
+function applyBlockOverlay(rule: SiteRule): void {
   const blockingSummary =
     rule.blockingMode === 'always'
       ? 'This website is always blocked.'
       : `Strict mode is active right now: ${formatScheduleSummary(rule.schedule)}.`
 
-  return `
-    <main class="prohibeo-shell">
-    <section class="prohibeo-card">
-    <p class="prohibeo-brand">prohibeo</p>
-        <h1>${rule.domain} is blocked</h1>
-        <p>${blockingSummary}</p>
-        <p>Open the Prohibeo popup to change this rule.</p>
-      </section>
-    </main>
-  `
-}
-
-function blockPage(rule: SiteRule): void {
-  window.stop()
-  activeBlockedRuleId = rule.id
-  removeHideStyle()
-  document.title = `Blocked · ${rule.domain} · Prohibeo`
-
-  const root = document.documentElement
-
-  if (!root) {
+  // If already showing, update text via shadow root (mode: 'open').
+  const existing = document.getElementById(OVERLAY_ID)
+  if (existing?.shadowRoot) {
+    const h1 = existing.shadowRoot.querySelector('h1')
+    const status = existing.shadowRoot.querySelector('.status')
+    if (h1) h1.textContent = `${rule.domain} is blocked`
+    if (status) status.textContent = blockingSummary
     return
   }
 
-  root.innerHTML = ''
+  const scrollLock = document.createElement('style')
+  scrollLock.id = SCROLL_LOCK_ID
+  scrollLock.textContent = 'html, body { overflow: hidden !important; }'
+  document.documentElement.append(scrollLock)
 
-  const head = document.createElement('head')
-  const metaCharset = document.createElement('meta')
+  const overlay = document.createElement('div')
+  overlay.id = OVERLAY_ID
+  // position:fixed + max z-index keeps us above everything
+  overlay.setAttribute('style', 'position:fixed;inset:0;z-index:2147483647;')
 
-  metaCharset.setAttribute('charset', 'UTF-8')
+  // Shadow DOM gives us a hard CSS boundary — the blocked site's styles cannot pierce in
+  const shadow = overlay.attachShadow({ mode: 'open' })
 
-  const metaViewport = document.createElement('meta')
-  metaViewport.name = 'viewport'
-  metaViewport.content = 'width=device-width, initial-scale=1.0'
+  const shadowStyle = document.createElement('style')
+  shadowStyle.textContent = SHADOW_CSS
 
-  const title = document.createElement('title')
-  title.textContent = `Blocked · ${rule.domain} · Prohibeo`
+  const shell = document.createElement('div')
+  shell.className = 'shell'
 
-  const style = document.createElement('style')
-  style.textContent = `
-    :root {
-      --background: #fff;
-      --foreground: #000;
-      --border: #000;
-      color: var(--foreground);
-      background: var(--background);
-      font-family: Inter, system-ui, sans-serif;
-      color-scheme: light dark;
-    }
+  const card = document.createElement('section')
+  card.className = 'card'
 
-    * {
-      box-sizing: border-box;
-    }
+  const brand = document.createElement('p')
+  brand.className = 'brand'
+  brand.textContent = 'prohibeo'
 
-    html, body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--background);
-      color: var(--foreground);
-    }
+  const heading = document.createElement('h1')
+  heading.textContent = `${rule.domain} is blocked`
 
-    .prohibeo-shell {
-      display: flex;
-      min-height: 100vh;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
+  const status = document.createElement('p')
+  status.className = 'status'
+  status.textContent = blockingSummary
 
-    .prohibeo-card {
-      width: min(480px, 100%);
-      border: 1px solid var(--border);
-      padding: 24px;
-    }
+  const hint = document.createElement('p')
+  hint.textContent = 'Open the Prohibeo popup to change this rule.'
 
-    .prohibeo-brand {
-      margin: 0 0 12px;
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    h1 {
-      margin: 0 0 12px;
-      font-size: 32px;
-      line-height: 1.1;
-    }
-
-    p {
-      margin: 0 0 12px;
-      font-size: 16px;
-      line-height: 1.5;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --background: #131313;
-        --foreground: #E6E6E6;
-        --border: #525252;
-      }
-    }
-  `
-
-  const body = document.createElement('body')
-  body.innerHTML = buildBlockedMarkup(rule)
-
-  head.append(metaCharset, metaViewport, title, style)
-  root.append(head, body)
-}
-
-function unblockIfNeeded(): void {
-  if (activeBlockedRuleId) {
-    window.location.reload()
-  }
+  card.append(brand, heading, status, hint)
+  shell.append(card)
+  shadow.append(shadowStyle, shell)
+  document.documentElement.append(overlay)
 }
 
 function applyMatchingRule(siteRules: SiteRule[]): void {
@@ -181,15 +176,11 @@ function applyMatchingRule(siteRules: SiteRule[]): void {
     isSiteRuleBlockingNow(matchingRule) &&
     !usesSectionHidingOnly(matchingRule.domain)
   ) {
-    blockPage(matchingRule)
+    applyBlockOverlay(matchingRule)
     return
   }
 
-  if (activeBlockedRuleId) {
-    unblockIfNeeded()
-    return
-  }
-
+  removeBlockOverlay()
   applyHideStyle(matchingRule)
 }
 

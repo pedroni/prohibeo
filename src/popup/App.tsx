@@ -6,10 +6,10 @@ import { normalizeDomainInput } from '../shared/domains'
 import { createSiteRule, getSiteRules, saveSiteRules, watchSiteRules } from '../shared/storage'
 import type { SiteRule } from '../shared/types'
 
-import { Button } from './components/Button'
+import { Button } from '@ui/Button'
 import { SiteCard } from './components/SiteCard'
 import { SiteSettingsPanel } from './components/SiteSettingsPanel'
-import { TextInput } from './components/TextInput'
+import { TextInput } from '@ui/TextInput'
 
 function sortSiteRules(siteRules: SiteRule[]): SiteRule[] {
   return [...siteRules].sort((left, right) => left.createdAt.localeCompare(right.createdAt))
@@ -152,7 +152,7 @@ export default function App() {
             <div className="flex gap-2">
               <TextInput
                 value={websiteInput}
-                onChange={(event) => {
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                   setWebsiteInput(event.target.value)
                   if (errorMessage) {
                     setErrorMessage(null)

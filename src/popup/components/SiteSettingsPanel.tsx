@@ -14,8 +14,8 @@ import {
 } from '../../shared/schedule'
 import { WEEKDAY_ORDER, type BlockingMode, type SiteRule, type Weekday } from '../../shared/types'
 
-import { Button } from './Button'
-import { TextInput } from './TextInput'
+import { Button } from '@ui/Button'
+import { TextInput } from '@ui/TextInput'
 import { Toggle } from './Toggle'
 
 type SiteSettingsPanelProps = {
