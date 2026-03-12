@@ -10,7 +10,10 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "site:dev": "npm --prefix site run dev",
+    "site:build": "npm --prefix site run build",
+    "site:preview": "npm --prefix site run preview"
   },
   "dependencies": {
     "@crxjs/vite-plugin": "^2.3.0",

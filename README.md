@@ -220,6 +220,41 @@ Type-check:
 npm run typecheck
 ```
 
+## Landing page site
+
+This repository now also includes a minimal Astro landing page in `site/`.
+
+Why Astro:
+
+- static-first
+- low boilerplate for a marketing site
+- MDX blog support
+- strong SEO defaults with very little client-side JavaScript
+
+Run the landing page locally:
+
+```bash
+npm run site:dev
+```
+
+Build the landing page:
+
+```bash
+npm run site:build
+```
+
+Preview the built landing page:
+
+```bash
+npm run site:preview
+```
+
+The landing page is designed to be deployed separately from the extension build, with
+Cloudflare Pages as the default target.
+
+For production SEO metadata, canonicals, and sitemap generation, set `SITE_URL` to the
+final site origin during deployment.
+
 ## License
 
 This project is licensed under the `MIT` License. See `LICENSE` for details.
