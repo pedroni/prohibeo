@@ -1,0 +1,21 @@
+---
+interface Props {
+  class?: string;
+  label?: string;
+  text?: string;
+}
+
+const {
+  class: className = '',
+  label = 'Install Prohibeo from the Chrome Web Store',
+  text = 'Install',
+} = Astro.props;
+
+const chromeLogoUrl = '/chrome-logo.svg';
+const installUrl = 'https://chromewebstore.google.com/category/extensions';
+---
+
+<a aria-label={label} class={`inline-flex items-center gap-2 ${className}`} href={installUrl}>
+  <img alt="" class="h-4 w-4" src={chromeLogoUrl} />
+  <span>{text}</span>
+</a>

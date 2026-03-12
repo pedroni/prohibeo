@@ -1,15 +1,16 @@
 ---
-import { getCollection } from "astro:content";
-import BaseLayout from "../layouts/BaseLayout.astro";
 import { Button } from "@ui/Button";
+import { formatBlogPublishDate, getPublishedBlogPosts } from "../blog";
+import ExtensionPreview from "../components/ExtensionPreview.astro";
 import GridBox from "../components/GridBox.astro";
 import SectionIntro from "../components/SectionIntro.astro";
 import SponsorHeartLink from "../components/SponsorHeartLink.astro";
 import SectionTitle from "../components/SectionTitle.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
 
-const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
-    .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
-    .at(0);
+const chromeLogoUrl = '/chrome-logo.svg';
+
+const recentPosts = (await getPublishedBlogPosts()).slice(0, 3);
 ---
 
 <BaseLayout
@@ -45,10 +46,8 @@ const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
                             href="https://chromewebstore.google.com/category/extensions"
                             size="lg"
                         >
-                            Add Prohibeo to Chrome
-                        </Button>
-                        <Button href="#features" size="lg" variant="secondary">
-                            See how it works
+                            Add Prohibeo
+                            <img alt="" class="h-4 w-4" src={chromeLogoUrl} />
                         </Button>
                     </div>
                     <p
@@ -59,88 +58,12 @@ const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
                         is always appreciated.
                     </p>
                 </div>
-
-                <div class="px-6 py-10 md:px-8 md:py-12">
-                    <div
-                        class="h-full border border-foreground/20 p-5 md:p-6"
-                        aria-label="Prohibeo interface preview"
-                    >
-                        <div class="mb-4 flex gap-1.5">
-                            <span class="h-3 w-3 bg-red-500"></span>
-                            <span class="h-3 w-3 bg-yellow-400"></span>
-                            <span class="h-3 w-3 bg-green-500"></span>
-                        </div>
-                        <div class="grid border border-foreground/20">
-                            <div class="p-5">
-                                <strong class="block text-base"
-                                    >youtube.com</strong
-                                >
-                                <p
-                                    class="mt-2 text-sm leading-6 text-muted-foreground"
-                                >
-                                    Scheduled blocking on weekdays, 9am to 5pm
-                                </p>
-                            </div>
-                            <div class="border-t border-foreground/20 p-5">
-                                <strong class="block text-base"
-                                    >Hide distracting sections</strong
-                                >
-                                <ul
-                                    class="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-muted-foreground"
-                                >
-                                    <li>Hide comments</li>
-                                    <li>Hide home page suggestions</li>
-                                    <li>Hide shorts</li>
-                                    <li>Hide video page suggestions</li>
-                                </ul>
-                            </div>
-                            <div class="border-t border-foreground/20 p-5">
-                                <strong class="block text-base"
-                                    >Custom selectors</strong
-                                >
-                                <p
-                                    class="mt-2 text-sm leading-6 text-muted-foreground"
-                                >
-                                    Add your own CSS selectors for any site you
-                                    want to clean up.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <ExtensionPreview />
             </div>
         </section>
 
-        <div class="grid grid-cols-1 md:grid-cols-3">
-            <GridBox>
-                <strong class="mb-2 block text-2xl tracking-[-0.04em]"
-                    >Made for Chrome</strong
-                >
-                <span class="text-sm leading-6 text-muted-foreground">
-                    Lightweight to install, easy to adjust, and built for
-                    everyday browsing
-                </span>
-            </GridBox>
-            <GridBox>
-                <strong class="mb-2 block text-2xl tracking-[-0.04em]"
-                    >Flexible blocking</strong
-                >
-                <span class="text-sm leading-6 text-muted-foreground">
-                    Block full sites, set schedules, or remove the parts of a
-                    page that pull you off track
-                </span>
-            </GridBox>
-                <GridBox>
-                    <strong class="mb-2 block text-2xl tracking-[-0.04em]"
-                        >Private and secure</strong
-                    >
-                    <span class="text-sm leading-6 text-muted-foreground">
-                        No tracking, no analytics, no account system. Your
-                        rules stay local in Chrome.
-                    </span>
-                </GridBox>
-        </div>
-        <section id="who-its-for">
+
+        <section id="who-its-for" class="border-t border-foreground/20">
             <SectionIntro>
                 <SectionTitle>Built for real attention</SectionTitle>
                 <p class="text-base leading-7 text-muted-foreground">
@@ -190,65 +113,6 @@ const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
             </div>
         </section>
 
-        <section class="border-t border-foreground/20" id="features">
-            <SectionIntro>
-                <SectionTitle>Made to help, not nag</SectionTitle>
-                <p class="text-base leading-7 text-muted-foreground">
-                    Prohibeo keeps the basics simple: block the sites that pull
-                    you off track, choose when the rules apply, and make noisy
-                    pages feel quieter. It is a lightweight tool built to be
-                    useful every day, without turning focus into a bigger
-                    project.
-                </p>
-            </SectionIntro>
-            <div class="grid grid-cols-1 pl-px pt-px md:grid-cols-2">
-                <GridBox as="article">
-                    <h3 class="mb-4 text-lg font-semibold">
-                        Block the sites you mean to avoid
-                    </h3>
-                    <p class="text-sm leading-6 text-muted-foreground">
-                        Choose the sites that tend to derail your day, and
-                        Prohibeo gets out of the way until you need it. No
-                        complicated setup, just a clear boundary when your
-                        attention needs one.
-                    </p>
-                </GridBox>
-                <GridBox as="article">
-                    <h3 class="mb-4 text-lg font-semibold">
-                        Set a schedule that fits real life
-                    </h3>
-                    <p class="text-sm leading-6 text-muted-foreground">
-                        Create focus hours that match how you actually work,
-                        whether that is weekdays, study sessions, or a small
-                        evening reset. You decide when blocking turns on, so it
-                        supports your routine instead of fighting it.
-                    </p>
-                </GridBox>
-                <GridBox as="article">
-                    <h3 class="mb-4 text-lg font-semibold">
-                        Clean up pages that are designed to pull you in
-                    </h3>
-                    <p class="text-sm leading-6 text-muted-foreground">
-                        Hide distracting parts of cluttered sites, including
-                        YouTube elements that make "one quick video" harder to
-                        keep quick. It is a gentler option when you do not want
-                        to block a site completely, just make it less grabby.
-                    </p>
-                </GridBox>
-                <GridBox as="article">
-                    <h3 class="mb-4 text-lg font-semibold">
-                        Lightweight, open, and easy to reach
-                    </h3>
-                    <p class="text-sm leading-6 text-muted-foreground">
-                        Prohibeo is meant to stay small, understandable, and
-                        genuinely useful. It is an open project, and if
-                        something feels off or missing, you can reach out like a
-                        person, not a ticket number.
-                    </p>
-                </GridBox>
-            </div>
-        </section>
-
         <section class="border-t border-foreground/20" id="install">
             <div class="px-6 py-8 md:px-8 md:py-10">
                 <div class="grid gap-4">
@@ -268,7 +132,9 @@ const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
                             href="https://chromewebstore.google.com/category/extensions"
                             size="lg"
                         >
-                            Add Prohibeo to Chrome
+                            Add Prohibeo
+                            <img alt="" class="h-4 w-4" src={chromeLogoUrl} />
+
                         </Button>
                         <Button href="/blog/" size="lg" variant="secondary">
                             Read the blog
@@ -304,7 +170,7 @@ const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
 
         <section class="border-t border-foreground/20">
             <SectionIntro>
-                <SectionTitle>Latest from the blog</SectionTitle>
+                <SectionTitle>Learn More</SectionTitle>
                 <p class="text-base leading-7 text-muted-foreground">
                     Notes on calmer browsing, better focus habits, and small
                     ways to make the internet less interruptive - plus product
@@ -312,31 +178,23 @@ const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
                 </p>
             </SectionIntro>
             {
-                latestPost && (
-                    <div class="grid grid-cols-1 pl-px pt-px">
-                        <GridBox as="article">
-                            <time
-                                class="block text-sm text-muted-foreground"
-                                datetime={latestPost.data.publishDate.toISOString()}
-                            >
-                                {latestPost.data.publishDate.toLocaleDateString(
-                                    "en-US",
-                                    {
-                                        month: "long",
-                                        day: "numeric",
-                                        year: "numeric",
-                                    },
-                                )}
-                            </time>
-                            <h3 class="mt-3 mb-3 text-lg font-semibold">
-                                <a href={`/blog/${latestPost.id}/`}>
-                                    {latestPost.data.title}
-                                </a>
-                            </h3>
-                            <p class="max-w-2xl text-sm leading-6 text-muted-foreground">
-                                {latestPost.data.description}
-                            </p>
-                        </GridBox>
+                recentPosts.length > 0 && (
+                    <div class="grid grid-cols-1 pl-px pt-px md:grid-cols-3">
+                        {recentPosts.map((post) => (
+                            <GridBox as="article">
+                                <time
+                                    class="block text-sm text-muted-foreground"
+                                    datetime={post.data.publishDate.toISOString()}
+                                >
+                                    {formatBlogPublishDate(post.data.publishDate)}
+                                </time>
+                                <h3 class="mt-3 mb-3 text-lg font-semibold">
+                                    <a href={`/blog/${post.id}/`}>
+                                        {post.data.title}
+                                    </a>
+                                </h3>
+                            </GridBox>
+                        ))}
                     </div>
                 )
             }

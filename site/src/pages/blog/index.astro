@@ -1,13 +1,10 @@
 ---
-import { getCollection } from "astro:content";
-import BaseLayout from "../../layouts/BaseLayout.astro";
+import { formatBlogPublishDate, getPublishedBlogPosts } from "../../blog";
 import GridBox from "../../components/GridBox.astro";
 import SectionTitle from "../../components/SectionTitle.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
 
-const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
-    (left, right) =>
-        right.data.publishDate.valueOf() - left.data.publishDate.valueOf(),
-);
+const posts = await getPublishedBlogPosts();
 ---
 
 <BaseLayout
@@ -31,11 +28,7 @@ const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
                             class="block text-sm text-muted-foreground"
                             datetime={post.data.publishDate.toISOString()}
                         >
-                            {post.data.publishDate.toLocaleDateString("en-US", {
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric",
-                            })}
+                            {formatBlogPublishDate(post.data.publishDate)}
                         </time>
                         <h3 class="mt-3 mb-3 text-lg font-semibold">
                             <a href={`/blog/${post.id}/`}>{post.data.title}</a>

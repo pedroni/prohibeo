@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
-import GitHubLink from '../components/GitHubLink.astro';
-import SponsorHeartLink from '../components/SponsorHeartLink.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
 
 interface Props {
   title: string;
@@ -11,9 +11,6 @@ interface Props {
 
 const { title, description, pathname = '/' } = Astro.props;
 const canonicalUrl = new URL(pathname, Astro.site ?? 'https://example.com');
-const chromeLogoUrl =
-  'https://upload.wikimedia.org/wikipedia/commons/e/e1/Google_Chrome_icon_%28February_2022%29.svg';
-const installUrl = 'https://chromewebstore.google.com/category/extensions';
 ---
 
 <!doctype html>
@@ -34,69 +31,9 @@ const installUrl = 'https://chromewebstore.google.com/category/extensions';
   </head>
   <body class="bg-background px-0 text-foreground md:px-6">
     <div class="mx-auto w-full max-w-[1024px] border-foreground/20 bg-background md:border-x">
-      <header class="border-b border-foreground/20">
-        <div class="flex w-full flex-col md:flex-row md:items-stretch md:justify-between">
-          <a class="inline-flex items-center gap-3 px-6 py-5 text-base font-extrabold tracking-[-0.03em] md:px-8" href="/">
-            <span
-              aria-hidden="true"
-              class="inline-flex h-10 w-10 items-center justify-center border border-foreground/20"
-            >
-              P
-            </span>
-            <span>Prohibeo</span>
-          </a>
-          <nav class="flex flex-col border-t border-foreground/20 text-sm md:flex-row md:self-stretch md:border-t-0" aria-label="Primary">
-            <a class="flex items-center px-6 py-3 transition-colors hover:bg-foreground/20 md:border-l md:border-foreground/20 md:px-5 md:py-0" href="/#features">How it works</a>
-            <a class="flex items-center border-t border-foreground/20 px-6 py-3 transition-colors hover:bg-foreground/20 md:border-t-0 md:border-l md:border-foreground/20 md:px-5 md:py-0" href="/blog/">Blog</a>
-            <GitHubLink class="border-t border-foreground/20 px-6 py-3 transition-colors hover:bg-foreground/20 md:border-t-0 md:border-l md:border-foreground/20 md:px-5 md:py-0" />
-            <SponsorHeartLink class="border-t border-foreground/20 px-6 py-3 transition-colors hover:bg-foreground/20 md:border-t-0 md:border-l md:border-foreground/20 md:px-5 md:py-0" showText={true} />
-            <a class="flex items-center gap-2 border-t border-foreground/20 px-6 py-3 font-semibold transition-colors hover:bg-foreground/20 md:border-t-0 md:border-l md:border-foreground/20 md:px-5 md:py-0" href={installUrl}>
-              <img alt="" class="h-4 w-4" src={chromeLogoUrl} />
-              <span>Install</span>
-            </a>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
       <slot />
-      <footer class="border-t border-foreground/20">
-        <div class="grid gap-8 px-6 py-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-start md:gap-12 md:px-8">
-          <div class="flex max-w-xl flex-col gap-4">
-            <a class="inline-flex w-fit items-center gap-3 text-base font-extrabold tracking-[-0.03em]" href="/">
-              <span
-                aria-hidden="true"
-                class="inline-flex h-10 w-10 items-center justify-center border border-foreground/20"
-              >
-                P
-              </span>
-              <span>Prohibeo</span>
-            </a>
-            <p class="max-w-xl text-sm leading-6 text-muted-foreground">
-              Prohibeo is an independent project built and maintained in the
-              open. It is free to use, and if it helps you, a little support
-              goes a long way.
-            </p>
-            <div class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              <span>One-time support is always appreciated</span>
-              <SponsorHeartLink showText={true} />
-            </div>
-          </div>
-          <div class="flex flex-col gap-4 text-sm md:items-end md:text-right">
-            <div class="flex flex-wrap items-center gap-x-5 gap-y-3 md:justify-end">
-              <a href="/#features">How it works</a>
-              <a href="/#privacy">Privacy</a>
-              <a href="/blog/">Blog</a>
-            </div>
-            <div class="flex flex-wrap items-center gap-4 md:justify-end">
-              <GitHubLink />
-              <SponsorHeartLink />
-              <a class="inline-flex items-center gap-2 font-semibold" href={installUrl}>
-                <img alt="" class="h-4 w-4" src={chromeLogoUrl} />
-                <span>Install</span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   </body>
 </html>
