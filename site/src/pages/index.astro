@@ -1,11 +1,15 @@
 ---
+import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { Button } from "@ui/Button";
+import GridBox from "../components/GridBox.astro";
+import InlineCode from "../components/InlineCode.astro";
+import SectionIntro from "../components/SectionIntro.astro";
+import SectionTitle from "../components/SectionTitle.astro";
 
-const boxClass = "-ml-px -mt-px border border-foreground/20 p-6 md:p-8";
-const sectionIntroClass = "max-w-3xl px-6 py-8 md:px-8 md:py-10";
-const sectionTitleClass =
-    "mb-3 text-[2rem] leading-none font-bold tracking-[-0.04em] md:text-[2.5rem]";
+const latestPost = (await getCollection("blog", ({ data }) => !data.draft))
+    .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
+    .at(0);
 ---
 
 <BaseLayout
@@ -98,46 +102,46 @@ const sectionTitleClass =
             <div
                 class="grid grid-cols-1 border-t border-foreground/20 pl-px pt-px md:grid-cols-3"
             >
-                <div class={boxClass}>
+                <GridBox>
                     <strong class="mb-2 block text-2xl tracking-[-0.04em]"
                         >2 modes</strong
                     >
                     <span class="text-sm leading-6 text-muted-foreground">
                         Always block or scheduled blocking
                     </span>
-                </div>
-                <div class={boxClass}>
+                </GridBox>
+                <GridBox>
                     <strong class="mb-2 block text-2xl tracking-[-0.04em]"
                         >Fine control</strong
                     >
                     <span class="text-sm leading-6 text-muted-foreground">
                         Hide comments, shorts, sidebars, and more
                     </span>
-                </div>
-                <div class={boxClass}>
+                </GridBox>
+                <GridBox>
                     <strong class="mb-2 block text-2xl tracking-[-0.04em]"
                         >Local-first</strong
                     >
                     <span class="text-sm leading-6 text-muted-foreground">
                         Settings stay in your Chrome profile
                     </span>
-                </div>
+                </GridBox>
             </div>
         </section>
 
         <section class="border-t border-foreground/20" id="features">
-            <div class={sectionIntroClass}>
-                <h2 class={sectionTitleClass}>
+            <SectionIntro>
+                <SectionTitle>
                     Everything you need for a low-friction focus setup
-                </h2>
+                </SectionTitle>
                 <p class="text-base leading-7 text-muted-foreground">
                     Prohibeo keeps the workflow simple: add a site, choose how
                     strict you want to be, and trim away the distracting
                     sections that still slip through.
                 </p>
-            </div>
+            </SectionIntro>
             <div class="grid grid-cols-1 pl-px pt-px md:grid-cols-3">
-                <article class={boxClass}>
+                <GridBox as="article">
                     <h3 class="mb-4 text-lg font-semibold">
                         Block entire sites
                     </h3>
@@ -145,10 +149,7 @@ const sectionTitleClass =
                         class="list-disc space-y-3 pl-5 text-sm leading-6 text-muted-foreground"
                     >
                         <li>
-                            Add domains like <code
-                                class="border border-foreground/20 px-1 py-0.5 text-[0.92em]"
-                                >youtube.com</code
-                            > or full URLs.
+                            Add domains like <InlineCode>youtube.com</InlineCode> or full URLs.
                         </li>
                         <li>Apply rules across subdomains automatically.</li>
                         <li>
@@ -156,8 +157,8 @@ const sectionTitleClass =
                             blocked.
                         </li>
                     </ul>
-                </article>
-                <article class={boxClass}>
+                </GridBox>
+                <GridBox as="article">
                     <h3 class="mb-4 text-lg font-semibold">
                         Choose when blocking applies
                     </h3>
@@ -172,8 +173,8 @@ const sectionTitleClass =
                             Keep rules flexible without adding extra complexity.
                         </li>
                     </ul>
-                </article>
-                <article class={boxClass}>
+                </GridBox>
+                <GridBox as="article">
                     <h3 class="mb-4 text-lg font-semibold">
                         Hide the noisy parts instead
                     </h3>
@@ -187,7 +188,7 @@ const sectionTitleClass =
                             rabbit holes.
                         </li>
                     </ul>
-                </article>
+                </GridBox>
             </div>
         </section>
 
@@ -195,7 +196,7 @@ const sectionTitleClass =
             <div class="px-6 py-8 md:px-8 md:py-10">
                 <div class="grid gap-4">
                     <div class="max-w-3xl">
-                        <h2 class={sectionTitleClass}>Install Prohibeo</h2>
+                        <SectionTitle>Install Prohibeo</SectionTitle>
                         <p class="text-base leading-7 text-muted-foreground">
                             Prohibeo is currently easiest to try as a local
                             Chrome extension build. When a Chrome Web Store
@@ -207,32 +208,16 @@ const sectionTitleClass =
                         class="list-decimal space-y-3 pl-5 text-sm leading-6 text-muted-foreground"
                     >
                         <li>
-                            Run <code
-                                class="border border-foreground/20 px-1 py-0.5 text-[0.92em]"
-                                >npm install</code
-                            > in the repo root.
+                            Run <InlineCode>npm install</InlineCode> in the repo root.
                         </li>
                         <li>
-                            Run <code
-                                class="border border-foreground/20 px-1 py-0.5 text-[0.92em]"
-                                >npm run build</code
-                            > to generate the extension in <code
-                                class="border border-foreground/20 px-1 py-0.5 text-[0.92em]"
-                                >dist/</code
-                            >.
+                            Run <InlineCode>npm run build</InlineCode> to generate the extension in <InlineCode>dist/</InlineCode>.
                         </li>
                         <li>
-                            Open <code
-                                class="border border-foreground/20 px-1 py-0.5 text-[0.92em]"
-                                >chrome://extensions</code
-                            > and enable Developer mode.
+                            Open <InlineCode>chrome://extensions</InlineCode> and enable Developer mode.
                         </li>
                         <li>
-                            Choose <strong>Load unpacked</strong> and select the generated
-                            <code
-                                class="border border-foreground/20 px-1 py-0.5 text-[0.92em]"
-                                >dist/</code
-                            > folder.
+                            Choose <strong>Load unpacked</strong> and select the generated <InlineCode>dist/</InlineCode> folder.
                         </li>
                     </ol>
                 </div>
@@ -243,12 +228,10 @@ const sectionTitleClass =
             <div class="px-6 py-8 md:px-8 md:py-10">
                 <div class="grid gap-4">
                     <div class="max-w-3xl">
-                        <h2 class={sectionTitleClass}>Privacy by default</h2>
+                        <SectionTitle>Privacy by default</SectionTitle>
                         <p class="text-base leading-7 text-muted-foreground">
-                            Prohibeo stores your settings in <code
-                                class="border border-foreground/20 px-1 py-0.5 text-[0.92em]"
-                                >chrome.storage.local</code
-                            >, so your website rules stay in your browser
+                            Prohibeo stores your settings in <InlineCode>chrome.storage.local</InlineCode>,
+                            so your website rules stay in your browser
                             profile on your machine.
                         </p>
                     </div>
@@ -264,32 +247,35 @@ const sectionTitleClass =
         </section>
 
         <section class="border-t border-foreground/20">
-            <div class={sectionIntroClass}>
-                <h2 class={sectionTitleClass}>Latest from the blog</h2>
+            <SectionIntro>
+                <SectionTitle>Latest from the blog</SectionTitle>
                 <p class="text-base leading-7 text-muted-foreground">
                     Use MDX posts for product updates, focus tips, release
                     notes, or Chrome Web Store launch announcements.
                 </p>
-            </div>
-            <div class="grid grid-cols-1 pl-px pt-px">
-                <article class={boxClass}>
-                    <time
-                        class="block text-sm text-muted-foreground"
-                        datetime="2026-03-12">March 12, 2026</time
-                    >
-                    <h3 class="mt-3 mb-3 text-lg font-semibold">
-                        <a href="/blog/welcome-to-prohibeo/"
-                            >Welcome to Prohibeo</a
+            </SectionIntro>
+            {latestPost && (
+                <div class="grid grid-cols-1 pl-px pt-px">
+                    <GridBox as="article">
+                        <time
+                            class="block text-sm text-muted-foreground"
+                            datetime={latestPost.data.publishDate.toISOString()}
                         >
-                    </h3>
-                    <p
-                        class="max-w-2xl text-sm leading-6 text-muted-foreground"
-                    >
-                        A starter post explaining what the extension does and
-                        how the landing page blog is structured.
-                    </p>
-                </article>
-            </div>
+                            {latestPost.data.publishDate.toLocaleDateString("en-US", {
+                                month: "long",
+                                day: "numeric",
+                                year: "numeric",
+                            })}
+                        </time>
+                        <h3 class="mt-3 mb-3 text-lg font-semibold">
+                            <a href={`/blog/${latestPost.id}/`}>{latestPost.data.title}</a>
+                        </h3>
+                        <p class="max-w-2xl text-sm leading-6 text-muted-foreground">
+                            {latestPost.data.description}
+                        </p>
+                    </GridBox>
+                </div>
+            )}
         </section>
     </main>
 </BaseLayout>

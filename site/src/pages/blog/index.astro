@@ -1,6 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import GridBox from '../../components/GridBox.astro';
+import SectionTitle from '../../components/SectionTitle.astro';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
   (left, right) => right.data.publishDate.valueOf() - left.data.publishDate.valueOf(),
@@ -14,9 +16,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 >
   <main class="border-t border-foreground/20">
     <div class="max-w-3xl px-6 py-8 md:px-8 md:py-10">
-      <h1 class="mb-3 text-[2rem] leading-none font-bold tracking-[-0.04em] md:text-[2.75rem]">
-        Prohibeo Blog
-      </h1>
+      <SectionTitle as="h1" size="lg">Prohibeo Blog</SectionTitle>
       <p class="text-base leading-7 text-muted-foreground">
         A lightweight MDX-powered blog for release notes, product updates, and focus
         ideas that support the extension.
@@ -25,7 +25,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
     <div class="grid grid-cols-1 pl-px pt-px">
       {
         posts.map((post) => (
-          <article class="-ml-px -mt-px border border-foreground/20 p-6 md:p-8">
+          <GridBox as="article">
             <time class="block text-sm text-muted-foreground" datetime={post.data.publishDate.toISOString()}>
               {post.data.publishDate.toLocaleDateString('en-US', {
                 month: 'long',
@@ -37,7 +37,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
               <a href={`/blog/${post.id}/`}>{post.data.title}</a>
             </h3>
             <p class="max-w-2xl text-sm leading-6 text-muted-foreground">{post.data.description}</p>
-          </article>
+          </GridBox>
         ))
       }
     </div>

@@ -2,26 +2,32 @@ import type { PresetOptionDefinition, PresetOptionKey, SiteRule } from './types'
 
 import { YOUTUBE_PRESET_OPTIONS } from './presets/youtube'
 
+interface PresetConfig {
+  displayName: string
+  options: PresetOptionDefinition<PresetOptionKey>[]
+  sectionHidingOnly: boolean
+}
+
+const PRESET_REGISTRY: Record<string, PresetConfig> = {
+  'youtube.com': {
+    displayName: 'YouTube',
+    options: YOUTUBE_PRESET_OPTIONS,
+    sectionHidingOnly: true,
+  },
+}
+
 export function usesSectionHidingOnly(domain: string): boolean {
-  return domain === 'youtube.com'
+  return PRESET_REGISTRY[domain]?.sectionHidingOnly ?? false
 }
 
 export function getPresetOptionsForDomain(
   domain: string,
 ): PresetOptionDefinition<PresetOptionKey>[] {
-  if (domain === 'youtube.com') {
-    return YOUTUBE_PRESET_OPTIONS
-  }
-
-  return []
+  return PRESET_REGISTRY[domain]?.options ?? []
 }
 
 export function getPresetDisplayName(domain: string): string | null {
-  if (domain === 'youtube.com') {
-    return 'YouTube'
-  }
-
-  return null
+  return PRESET_REGISTRY[domain]?.displayName ?? null
 }
 
 export function getEnabledPresetLabels(rule: SiteRule): string[] {

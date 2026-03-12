@@ -1,0 +1,13 @@
+---
+interface Props {
+  as?: 'h1' | 'h2' | 'h3'
+  size?: 'default' | 'lg'
+}
+
+const { as: Tag = 'h2', size = 'default' } = Astro.props
+const responsiveSize = size === 'lg' ? 'md:text-[2.75rem]' : 'md:text-[2.5rem]'
+---
+
+<Tag class={`mb-3 text-[2rem] leading-none font-bold tracking-[-0.04em] ${responsiveSize}`}>
+  <slot />
+</Tag>

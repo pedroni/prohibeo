@@ -1,8 +1,9 @@
 import { faXTwitter, faYoutube } from "@fortawesome/free-brands-svg-icons";
 import { faGear, faGlobe, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import type { ReactNode } from "react";
 
-import { Button } from "../../../ui/Button";
+import { Button } from "@ui/Button";
 import {
   getEnabledPresetLabels,
   usesSectionHidingOnly,
@@ -26,6 +27,20 @@ function getSiteIcon(domain: string) {
   }
 
   return faGlobe;
+}
+
+function Badge({ children, active = false }: { children: ReactNode; active?: boolean }) {
+  return (
+    <span
+      className={`border px-2 py-1 text-xs font-semibold ${
+        active
+          ? "border-foreground bg-foreground text-background"
+          : "border-foreground/20 bg-background text-foreground"
+      }`}
+    >
+      {children}
+    </span>
+  );
 }
 
 export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
@@ -78,29 +93,18 @@ export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <span
-          className={`border px-2 py-1 text-xs font-semibold ${
-            blockingNow
-              ? "border-foreground bg-foreground text-background"
-              : "border-foreground/20 bg-background text-foreground"
-          }`}
-        >
+        <Badge active={blockingNow}>
           {blockingNow ? "Blocking now" : "Not blocking now"}
-        </span>
+        </Badge>
 
         {enabledPresetLabels.map((label) => (
-          <span
-            key={label}
-            className="border border-foreground/20 px-2 py-1 text-xs font-semibold"
-          >
-            {label}
-          </span>
+          <Badge key={label}>{label}</Badge>
         ))}
 
         {selectorCount > 0 ? (
-          <span className="border border-foreground/20 px-2 py-1 text-xs font-semibold">
+          <Badge>
             {selectorCount} selector{selectorCount === 1 ? "" : "s"}
-          </span>
+          </Badge>
         ) : null}
       </div>
     </article>

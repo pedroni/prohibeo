@@ -22,6 +22,7 @@ import {
 } from '../../shared/types'
 
 import { Button } from '@ui/Button'
+import { Select } from '@ui/Select'
 import { TextInput } from '@ui/TextInput'
 import { Toggle } from './Toggle'
 
@@ -33,14 +34,19 @@ type SiteSettingsPanelProps = {
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => hour)
 
-interface NewScheduleForm {
+interface ScheduleFormValues {
   name: string
   weekdays: Weekday[]
   startHour: number
   endHour: number
 }
 
-const EMPTY_SCHEDULE_FORM: NewScheduleForm = {
+type ScheduleFormState =
+  | { mode: 'idle' }
+  | { mode: 'adding' }
+  | { mode: 'editing'; scheduleId: string }
+
+const DEFAULT_FORM_VALUES: ScheduleFormValues = {
   name: '',
   weekdays: [...DEFAULT_SCHEDULE.weekdays],
   startHour: DEFAULT_SCHEDULE.startHour,
@@ -56,6 +62,97 @@ function isValidSelector(selector: string): boolean {
   }
 }
 
+interface ScheduleFormProps {
+  values: ScheduleFormValues
+  nameError: string | null
+  onChange: (next: ScheduleFormValues) => void
+  onSave: () => void
+  onCancel: () => void
+}
+
+function ScheduleForm({ values, nameError, onChange, onSave, onCancel }: ScheduleFormProps) {
+  function toggleWeekday(weekday: Weekday): void {
+    const next = values.weekdays.includes(weekday)
+      ? values.weekdays.filter((w) => w !== weekday)
+      : [...values.weekdays, weekday].sort(
+          (a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b),
+        )
+    onChange({ ...values, weekdays: next })
+  }
+
+  return (
+    <div className="space-y-3 border-t border-foreground/20 pt-3">
+      <div>
+        <p className="mb-1 text-sm font-bold">Schedule name</p>
+        <TextInput
+          value={values.name}
+          onChange={(e) => onChange({ ...values, name: e.target.value })}
+          placeholder="e.g. Deep Focus"
+          autoComplete="off"
+        />
+        {nameError ? (
+          <p className="mt-1 text-xs font-semibold text-foreground">{nameError}</p>
+        ) : null}
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-bold">Days</p>
+        <div className="flex justify-between">
+          {WEEKDAY_ORDER.map((weekday) => (
+            <Button
+              key={weekday}
+              size="xs"
+              variant={values.weekdays.includes(weekday) ? 'primary' : 'secondary'}
+              onClick={() => toggleWeekday(weekday)}
+            >
+              {WEEKDAY_LABELS[weekday]}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <label className="space-y-1 text-sm font-bold">
+          <span>Start hour</span>
+          <Select
+            value={values.startHour}
+            onChange={(e) => onChange({ ...values, startHour: Number(e.target.value) })}
+          >
+            {HOUR_OPTIONS.map((hour) => (
+              <option key={hour} value={hour}>
+                {formatHourLabel(hour)}
+              </option>
+            ))}
+          </Select>
+        </label>
+
+        <label className="space-y-1 text-sm font-bold">
+          <span>End hour</span>
+          <Select
+            value={values.endHour}
+            onChange={(e) => onChange({ ...values, endHour: Number(e.target.value) })}
+          >
+            {HOUR_OPTIONS.map((hour) => (
+              <option key={hour} value={hour}>
+                {formatHourLabel(hour)}
+              </option>
+            ))}
+          </Select>
+        </label>
+      </div>
+
+      <div className="flex gap-2">
+        <Button variant="primary" onClick={onSave}>
+          Save
+        </Button>
+        <Button variant="secondary" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 export function SiteSettingsPanel({
   rule,
   onClose,
@@ -63,9 +160,8 @@ export function SiteSettingsPanel({
 }: SiteSettingsPanelProps) {
   const [selectorInput, setSelectorInput] = useState('')
   const [selectorError, setSelectorError] = useState<string | null>(null)
-  const [isAddingSchedule, setIsAddingSchedule] = useState(false)
-  const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null)
-  const [newSchedule, setNewSchedule] = useState<NewScheduleForm>(EMPTY_SCHEDULE_FORM)
+  const [scheduleFormState, setScheduleFormState] = useState<ScheduleFormState>({ mode: 'idle' })
+  const [scheduleFormValues, setScheduleFormValues] = useState<ScheduleFormValues>(DEFAULT_FORM_VALUES)
   const [scheduleNameError, setScheduleNameError] = useState<string | null>(null)
 
   const presetLabel = getPresetDisplayName(rule.domain)
@@ -97,70 +193,57 @@ export function SiteSettingsPanel({
     })
   }
 
-  function toggleNewScheduleWeekday(weekday: Weekday): void {
-    setNewSchedule((prev) => ({
-      ...prev,
-      weekdays: prev.weekdays.includes(weekday)
-        ? prev.weekdays.filter((w) => w !== weekday)
-        : [...prev.weekdays, weekday].sort(
-            (a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b),
-          ),
-    }))
-  }
-
   function handleSaveSchedule(): void {
-    const name = newSchedule.name.trim()
+    const name = scheduleFormValues.name.trim()
 
     if (!name) {
       setScheduleNameError('Enter a name for this schedule.')
       return
     }
 
-    if (editingScheduleId !== null) {
+    if (scheduleFormState.mode === 'editing') {
+      const { scheduleId } = scheduleFormState
       updateRule({
         ...rule,
         schedules: rule.schedules.map((s) =>
-          s.id === editingScheduleId
-            ? { ...s, name, weekdays: newSchedule.weekdays, startHour: newSchedule.startHour, endHour: newSchedule.endHour }
+          s.id === scheduleId
+            ? { ...s, name, weekdays: scheduleFormValues.weekdays, startHour: scheduleFormValues.startHour, endHour: scheduleFormValues.endHour }
             : s
         ),
       })
-      setEditingScheduleId(null)
     } else {
       const schedule: NamedSchedule = {
         id: crypto.randomUUID(),
         name,
-        weekdays: newSchedule.weekdays,
-        startHour: newSchedule.startHour,
-        endHour: newSchedule.endHour,
+        weekdays: scheduleFormValues.weekdays,
+        startHour: scheduleFormValues.startHour,
+        endHour: scheduleFormValues.endHour,
       }
       updateRule({
         ...rule,
         schedules: [...rule.schedules, schedule],
       })
-      setIsAddingSchedule(false)
     }
 
-    setNewSchedule(EMPTY_SCHEDULE_FORM)
+    setScheduleFormState({ mode: 'idle' })
+    setScheduleFormValues(DEFAULT_FORM_VALUES)
     setScheduleNameError(null)
   }
 
   function handleCancelSchedule(): void {
-    setNewSchedule(EMPTY_SCHEDULE_FORM)
+    setScheduleFormState({ mode: 'idle' })
+    setScheduleFormValues(DEFAULT_FORM_VALUES)
     setScheduleNameError(null)
-    setIsAddingSchedule(false)
-    setEditingScheduleId(null)
   }
 
   function handleEditSchedule(schedule: NamedSchedule): void {
-    setEditingScheduleId(schedule.id)
-    setNewSchedule({
+    setScheduleFormState({ mode: 'editing', scheduleId: schedule.id })
+    setScheduleFormValues({
       name: schedule.name,
       weekdays: [...schedule.weekdays],
       startHour: schedule.startHour,
       endHour: schedule.endHour,
     })
-    setIsAddingSchedule(false)
     setScheduleNameError(null)
   }
 
@@ -261,7 +344,7 @@ export function SiteSettingsPanel({
               </p>
             </div>
 
-            {rule.schedules.length === 0 && !isAddingSchedule ? (
+            {rule.schedules.length === 0 && scheduleFormState.mode === 'idle' ? (
               <p className="text-sm text-muted-foreground">
                 No schedules yet. Add one to define when this site is blocked.
               </p>
@@ -269,85 +352,18 @@ export function SiteSettingsPanel({
 
             {/* Existing schedule rows */}
             {rule.schedules.map((schedule) =>
-              editingScheduleId === schedule.id ? (
-                <div key={schedule.id} className="space-y-3 border-t border-foreground/20 pt-3">
-                  <div>
-                    <p className="mb-1 text-sm font-bold">Schedule name</p>
-                    <TextInput
-                      value={newSchedule.name}
-                      onChange={(e) => {
-                        setNewSchedule((prev) => ({ ...prev, name: e.target.value }))
-                        if (scheduleNameError) setScheduleNameError(null)
-                      }}
-                      placeholder="e.g. Deep Focus"
-                      autoComplete="off"
-                    />
-                    {scheduleNameError ? (
-                      <p className="mt-1 text-xs font-semibold text-foreground">{scheduleNameError}</p>
-                    ) : null}
-                  </div>
-
-                  <div>
-                    <p className="mb-2 text-sm font-bold">Days</p>
-                    <div className="flex justify-between">
-                      {WEEKDAY_ORDER.map((weekday) => (
-                        <Button
-                          key={weekday}
-                          size="xs"
-                          variant={newSchedule.weekdays.includes(weekday) ? 'primary' : 'secondary'}
-                          onClick={() => toggleNewScheduleWeekday(weekday)}
-                        >
-                          {WEEKDAY_LABELS[weekday]}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="space-y-1 text-sm font-bold">
-                      <span>Start hour</span>
-                      <select
-                        value={newSchedule.startHour}
-                        onChange={(e) =>
-                          setNewSchedule((prev) => ({ ...prev, startHour: Number(e.target.value) }))
-                        }
-                        className="w-full border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
-                      >
-                        {HOUR_OPTIONS.map((hour) => (
-                          <option key={hour} value={hour}>
-                            {formatHourLabel(hour)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="space-y-1 text-sm font-bold">
-                      <span>End hour</span>
-                      <select
-                        value={newSchedule.endHour}
-                        onChange={(e) =>
-                          setNewSchedule((prev) => ({ ...prev, endHour: Number(e.target.value) }))
-                        }
-                        className="w-full border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
-                      >
-                        {HOUR_OPTIONS.map((hour) => (
-                          <option key={hour} value={hour}>
-                            {formatHourLabel(hour)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button variant="primary" onClick={handleSaveSchedule}>
-                      Save
-                    </Button>
-                    <Button variant="secondary" onClick={handleCancelSchedule}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
+              scheduleFormState.mode === 'editing' && scheduleFormState.scheduleId === schedule.id ? (
+                <ScheduleForm
+                  key={schedule.id}
+                  values={scheduleFormValues}
+                  nameError={scheduleNameError}
+                  onChange={(next) => {
+                    setScheduleFormValues(next)
+                    if (scheduleNameError) setScheduleNameError(null)
+                  }}
+                  onSave={handleSaveSchedule}
+                  onCancel={handleCancelSchedule}
+                />
               ) : (
                 <div
                   key={schedule.id}
@@ -358,115 +374,43 @@ export function SiteSettingsPanel({
                     <p className="text-sm text-muted-foreground">{formatScheduleSummary(schedule)}</p>
                   </div>
                   <div className="flex shrink-0 gap-1">
-                    <button
-                      type="button"
+                    <Button
+                      size="icon"
                       aria-label={`Edit ${schedule.name}`}
                       onClick={() => handleEditSchedule(schedule)}
-                      className="inline-flex h-8 w-8 items-center justify-center border border-foreground/20 hover:bg-foreground/20"
                     >
                       <FontAwesomeIcon icon={faPencil} />
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      size="icon"
                       aria-label={`Remove ${schedule.name}`}
                       onClick={() => handleRemoveSchedule(schedule.id)}
-                      className="inline-flex h-8 w-8 items-center justify-center border border-foreground/20 hover:bg-foreground/20"
                     >
                       <FontAwesomeIcon icon={faTrashCan} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )
             )}
 
             {/* Add schedule form */}
-            {isAddingSchedule ? (
-              <div className="space-y-3 border-t border-foreground/20 pt-3">
-                <div>
-                  <p className="mb-1 text-sm font-bold">Schedule name</p>
-                  <TextInput
-                    value={newSchedule.name}
-                    onChange={(e) => {
-                      setNewSchedule((prev) => ({ ...prev, name: e.target.value }))
-                      if (scheduleNameError) setScheduleNameError(null)
-                    }}
-                    placeholder="e.g. Deep Focus"
-                    autoComplete="off"
-                  />
-                  {scheduleNameError ? (
-                    <p className="mt-1 text-xs font-semibold text-foreground">{scheduleNameError}</p>
-                  ) : null}
-                </div>
-
-                <div>
-                  <p className="mb-2 text-sm font-bold">Days</p>
-                  <div className="flex justify-between">
-                    {WEEKDAY_ORDER.map((weekday) => (
-                      <Button
-                        key={weekday}
-                        size="xs"
-                        variant={newSchedule.weekdays.includes(weekday) ? 'primary' : 'secondary'}
-                        onClick={() => toggleNewScheduleWeekday(weekday)}
-                      >
-                        {WEEKDAY_LABELS[weekday]}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="space-y-1 text-sm font-bold">
-                    <span>Start hour</span>
-                    <select
-                      value={newSchedule.startHour}
-                      onChange={(e) =>
-                        setNewSchedule((prev) => ({ ...prev, startHour: Number(e.target.value) }))
-                      }
-                      className="w-full border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
-                    >
-                      {HOUR_OPTIONS.map((hour) => (
-                        <option key={hour} value={hour}>
-                          {formatHourLabel(hour)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="space-y-1 text-sm font-bold">
-                    <span>End hour</span>
-                    <select
-                      value={newSchedule.endHour}
-                      onChange={(e) =>
-                        setNewSchedule((prev) => ({ ...prev, endHour: Number(e.target.value) }))
-                      }
-                      className="w-full border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
-                    >
-                      {HOUR_OPTIONS.map((hour) => (
-                        <option key={hour} value={hour}>
-                          {formatHourLabel(hour)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button variant="primary" onClick={handleSaveSchedule}>
-                    Save
-                  </Button>
-                  <Button variant="secondary" onClick={handleCancelSchedule}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              editingScheduleId === null ? (
-                <Button onClick={() => setIsAddingSchedule(true)}>
-                  <FontAwesomeIcon icon={faPlus} />
-                  Add schedule
-                </Button>
-              ) : null
-            )}
+            {scheduleFormState.mode === 'adding' ? (
+              <ScheduleForm
+                values={scheduleFormValues}
+                nameError={scheduleNameError}
+                onChange={(next) => {
+                  setScheduleFormValues(next)
+                  if (scheduleNameError) setScheduleNameError(null)
+                }}
+                onSave={handleSaveSchedule}
+                onCancel={handleCancelSchedule}
+              />
+            ) : scheduleFormState.mode === 'idle' ? (
+              <Button onClick={() => setScheduleFormState({ mode: 'adding' })}>
+                <FontAwesomeIcon icon={faPlus} />
+                Add schedule
+              </Button>
+            ) : null}
           </section>
         ) : null}
 
@@ -543,14 +487,13 @@ export function SiteSettingsPanel({
                   className="flex items-center justify-between gap-3 border border-foreground/20 px-3 py-2"
                 >
                   <code className="min-w-0 flex-1 truncate text-sm">{selector}</code>
-                  <button
-                    type="button"
+                  <Button
+                    size="icon"
                     aria-label={`Remove ${selector}`}
                     onClick={() => handleRemoveSelector(selector)}
-                    className="inline-flex h-8 w-8 items-center justify-center border border-foreground/20"
                   >
                     <FontAwesomeIcon icon={faTrashCan} />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
