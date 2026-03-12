@@ -84,7 +84,7 @@ export default function App() {
 
       if (existingSiteRule) {
         setSelectedSiteRuleId(existingSiteRule.id)
-        throw new Error(`${normalizedDomain} is already in Distractio.`)
+        throw new Error(`${normalizedDomain} is already in Prohibeo.`)
       }
 
       const nextSiteRule = createSiteRule(normalizedDomain)
@@ -131,7 +131,7 @@ export default function App() {
               <FontAwesomeIcon icon={faBan} />
             </span>
             <div>
-              <h1 className="text-2xl font-bold">Distractio</h1>
+              <h1 className="text-2xl font-bold">Prohibeo</h1>
               <p className="text-sm">Block websites and hide distracting sections.</p>
             </div>
           </div>

@@ -1,8 +1,9 @@
 {
-  "name": "distractio",
+  "name": "prohibeo",
   "private": true,
   "version": "0.1.0",
-  "description": "Distractio Chrome extension",
+  "description": "Prohibeo Chrome extension",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",

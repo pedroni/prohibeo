@@ -4,7 +4,7 @@ import { formatScheduleSummary, isSiteRuleBlockingNow } from '../shared/schedule
 import { getSiteRules, watchSiteRules } from '../shared/storage'
 import type { SiteRule } from '../shared/types'
 
-const HIDE_STYLE_ID = 'distractio-hide-style'
+const HIDE_STYLE_ID = 'prohibeo-hide-style'
 let activeBlockedRuleId: string | null = null
 
 function getUniqueSelectors(rule: SiteRule): string[] {
@@ -57,12 +57,12 @@ function buildBlockedMarkup(rule: SiteRule): string {
       : `Strict mode is active right now: ${formatScheduleSummary(rule.schedule)}.`
 
   return `
-    <main class="distractio-shell">
-      <section class="distractio-card">
-        <p class="distractio-brand">Distractio</p>
+    <main class="prohibeo-shell">
+    <section class="prohibeo-card">
+    <p class="prohibeo-brand">prohibeo</p>
         <h1>${rule.domain} is blocked</h1>
         <p>${blockingSummary}</p>
-        <p>Open the Distractio popup to change this rule.</p>
+        <p>Open the Prohibeo popup to change this rule.</p>
       </section>
     </main>
   `
@@ -72,7 +72,7 @@ function blockPage(rule: SiteRule): void {
   window.stop()
   activeBlockedRuleId = rule.id
   removeHideStyle()
-  document.title = `Blocked · ${rule.domain} · Distractio`
+  document.title = `Blocked · ${rule.domain} · Prohibeo`
 
   const root = document.documentElement
 
@@ -92,7 +92,7 @@ function blockPage(rule: SiteRule): void {
   metaViewport.content = 'width=device-width, initial-scale=1.0'
 
   const title = document.createElement('title')
-  title.textContent = `Blocked · ${rule.domain} · Distractio`
+  title.textContent = `Blocked · ${rule.domain} · Prohibeo`
 
   const style = document.createElement('style')
   style.textContent = `
@@ -113,7 +113,7 @@ function blockPage(rule: SiteRule): void {
       color: #000;
     }
 
-    .distractio-shell {
+    .prohibeo-shell {
       display: flex;
       min-height: 100vh;
       align-items: center;
@@ -121,13 +121,13 @@ function blockPage(rule: SiteRule): void {
       padding: 24px;
     }
 
-    .distractio-card {
+    .prohibeo-card {
       width: min(480px, 100%);
       border: 1px solid #000;
       padding: 24px;
     }
 
-    .distractio-brand {
+    .prohibeo-brand {
       margin: 0 0 12px;
       font-size: 14px;
       font-weight: 700;
@@ -186,7 +186,7 @@ async function refreshRules(): Promise<void> {
     const siteRules = await getSiteRules()
     applyMatchingRule(siteRules)
   } catch (error) {
-    console.error('Distractio failed to load rules.', error)
+    console.error('Prohibeo failed to load rules.', error)
     removeHideStyle()
   }
 }

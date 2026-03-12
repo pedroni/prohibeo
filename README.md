@@ -1,10 +1,10 @@
-# Distractio
+# Prohibeo
 
-Distractio is a Chrome extension for blocking distracting websites and hiding distracting parts of a website.
+Prohibeo is a Chrome extension for blocking distracting websites and hiding distracting parts of a website.
 
 ## What it does
 
-Distractio lets you:
+Prohibeo lets you:
 
 - block an entire site
 - switch a site between `Always block` and `Scheduled blocking`
@@ -16,11 +16,11 @@ Blocking a root domain such as `youtube.com` also matches subdomains like `www.y
 
 ## Supported features
 
-Distractio currently supports:
+Prohibeo currently supports:
 
 - Chrome extension popup UI for managing rules
 - adding multiple websites
-- full-site blocking with a Distractio blocked screen
+- full-site blocking with a Prohibeo blocked screen
 - per-site blocking mode:
   - `Always block`
   - `Scheduled blocking`
@@ -43,7 +43,7 @@ Distractio currently supports:
 
 ## Current limitations
 
-Distractio does not currently include:
+Prohibeo does not currently include:
 
 - cloud sync between browsers/devices
 - import/export of rules
@@ -73,13 +73,13 @@ Distractio does not currently include:
 
 6. Select the `dist/` folder from this project
 
-After that, you should see the Distractio extension in Chrome.
+After that, you should see the Prohibeo extension in Chrome.
 
-## How to use Distractio
+## How to use Prohibeo
 
 ### 1. Open the popup
 
-Click the Distractio extension icon in the Chrome toolbar.
+Click the Prohibeo extension icon in the Chrome toolbar.
 
 The popup is the main place where you manage blocked websites.
 
@@ -96,12 +96,12 @@ Then click **Add**.
 When you add a website, the default behavior is:
 
 - the website is immediately blocked
-- Distractio shows a blocked screen when you visit it
+- Prohibeo shows a blocked screen when you visit it
 - the site is set to **Always block**
 
 For `youtube.com`, the behavior is different:
 
-- Distractio does **not** block the full page
+- Prohibeo does **not** block the full page
 - it uses section hiding only
 - built-in YouTube distraction toggles start enabled by default
 
@@ -122,7 +122,7 @@ Each website can use one of two modes:
 
 The site is blocked all the time.
 
-When you visit it, Distractio replaces the page with a simple blocked screen.
+When you visit it, Prohibeo replaces the page with a simple blocked screen.
 
 ### Scheduled blocking
 
@@ -138,11 +138,11 @@ Outside that schedule, the full-site block is not active.
 
 ## Hiding parts of a site
 
-Distractio can also hide sections of a website instead of blocking the entire site.
+Prohibeo can also hide sections of a website instead of blocking the entire site.
 
 ### Built-in options for supported sites
 
-For YouTube, Distractio does not use the full-page blocked screen. Instead, you can toggle options such as:
+For YouTube, Prohibeo does not use the full-page blocked screen. Instead, you can toggle options such as:
 
 - Hide Comments
 - Hide Home Page Suggestions
@@ -172,7 +172,7 @@ To remove one, click the trash icon next to it.
 
 ## Where settings are stored
 
-Distractio stores your website rules in `chrome.storage.local`.
+Prohibeo stores your website rules in `chrome.storage.local`.
 
 That means your settings stay inside your browser profile on your machine.
 
@@ -219,3 +219,7 @@ Type-check:
 ```bash
 npm run typecheck
 ```
+
+## License
+
+This project is licensed under the `MIT` License. See `LICENSE` for details.

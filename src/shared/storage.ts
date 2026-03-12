@@ -17,7 +17,7 @@ const SITE_RULES_STORAGE_KEY = 'siteRules'
 function ensureStorageAvailability(): void {
   if (typeof chrome === 'undefined' || !chrome.storage?.local) {
     throw new Error(
-      'Chrome extension APIs are unavailable. Load Distractio as an unpacked extension to use it.',
+      'Chrome extension APIs are unavailable. Load Prohibeo as an unpacked extension to use it.',
     )
   }
 }

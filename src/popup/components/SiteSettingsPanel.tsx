@@ -152,7 +152,7 @@ export function SiteSettingsPanel({
             <h3 className="text-lg font-bold">{sectionOnlyRule ? 'Activation' : 'Blocking'}</h3>
             <p className="text-sm">
               {sectionOnlyRule
-                ? 'YouTube is never replaced with the Distractio block screen. These controls decide when its distracting sections are hidden.'
+                ? 'YouTube is never replaced with the Prohibeo block screen. These controls decide when its distracting sections are hidden.'
                 : 'New sites default to always blocked. Switch to a strict schedule when needed.'}
             </p>
           </div>
