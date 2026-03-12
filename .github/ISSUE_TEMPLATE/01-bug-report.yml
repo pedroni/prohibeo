@@ -7,7 +7,7 @@ body:
     id: description
     attributes:
       label: Description
-      description: A clear description of what the bug is
+      description: A short description of what the bug is
       placeholder: Describe the bug here...
     validations:
       required: true
@@ -41,12 +41,6 @@ body:
     attributes:
       label: Prohibeo Version
       placeholder: e.g., 0.1.0
-  - type: textarea
-    id: environment
-    attributes:
-      label: Environment
-      description: OS, browser version, any relevant extensions
-      placeholder: macOS 14, Chrome 122
   - type: textarea
     id: screenshots
     attributes:
