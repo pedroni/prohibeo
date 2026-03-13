@@ -2,7 +2,7 @@ import { faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
-export type SearchableSelectOption<TValue extends string> = {
+export type SelectableOption<TValue extends string> = {
   value: TValue
   searchText: string
   label: string
@@ -10,17 +10,17 @@ export type SearchableSelectOption<TValue extends string> = {
   icon?: ReactNode
 }
 
-type SearchableSelectProps<TValue extends string> = {
+type SelectableProps<TValue extends string> = {
   value: string
   onChange: (value: string) => void
   onSelect?: (value: TValue) => void
-  options: SearchableSelectOption<TValue>[]
+  options: SelectableOption<TValue>[]
   placeholder: string
   buttonLabel: string
   emptyMessage?: string
 }
 
-export function SearchableSelect<TValue extends string>({
+export function Selectable<TValue extends string>({
   value,
   onChange,
   onSelect,
@@ -28,7 +28,7 @@ export function SearchableSelect<TValue extends string>({
   placeholder,
   buttonLabel,
   emptyMessage = 'No matches found.',
-}: SearchableSelectProps<TValue>) {
+}: SelectableProps<TValue>) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const containerRef = useRef<HTMLDivElement>(null)

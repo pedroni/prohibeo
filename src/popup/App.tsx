@@ -14,9 +14,9 @@ import {
 import type { ExtensionData, NamedSchedule, SiteRule } from '../shared/types'
 
 import { Button } from '@ui/Button'
+import { SiteSelectable } from './components/SiteSelectable'
 import { SiteCard } from './components/SiteCard'
 import { SiteSettingsPanel } from './components/SiteSettingsPanel'
-import { SocialMediaCombobox } from './components/SocialMediaCombobox'
 
 function pruneUnusedSchedules(siteRules: SiteRule[], schedules: NamedSchedule[]): NamedSchedule[] {
   const usedScheduleIds = new Set(siteRules.flatMap((siteRule) => siteRule.scheduleIds))
@@ -291,7 +291,7 @@ export default function App() {
               {errorMessage ? <p className="text-sm font-semibold text-red-500">{errorMessage}</p> : null}
 
               <div className="flex gap-2">
-                <SocialMediaCombobox
+                <SiteSelectable
                   value={websiteInput}
                   excludedDomains={siteRules.map((rule) => rule.domain)}
                   onChange={(value) => {

@@ -30,9 +30,9 @@ import {
 
 import { Button } from '@ui/Button'
 import { ConfirmDeleteButton } from '@ui/ConfirmDeleteButton'
+import { Selectable, type SelectableOption } from '@ui/Selectable'
 import { Select } from '@ui/Select'
 import { TextInput } from '@ui/TextInput'
-import { SearchableSelect, type SearchableSelectOption } from './SearchableSelect'
 import { Toggle } from './Toggle'
 
 type SiteSettingsPanelProps = {
@@ -217,7 +217,7 @@ export function SiteSettingsPanel({
     () => schedules.filter((schedule) => !rule.scheduleIds.includes(schedule.id)),
     [rule.scheduleIds, schedules],
   )
-  const scheduleOptions: SearchableSelectOption<string>[] = useMemo(
+  const scheduleOptions: SelectableOption<string>[] = useMemo(
     () =>
       unassignedSchedules.map((schedule) => ({
         value: schedule.id,
@@ -588,7 +588,7 @@ export function SiteSettingsPanel({
             {scheduleOptions.length > 0 ? (
               <div className="space-y-2 border-t border-foreground/20 pt-3">
                 <p className="text-sm font-bold">Add existing schedule</p>
-                <SearchableSelect
+                <Selectable
                   value={schedulePickerValue}
                   onChange={setSchedulePickerValue}
                   onSelect={handleAttachSchedule}
