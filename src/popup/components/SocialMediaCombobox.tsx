@@ -1,52 +1,22 @@
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import {
-  faDiscord,
-  faFacebook,
-  faInstagram,
-  faLinkedin,
-  faPinterest,
-  faReddit,
-  faSnapchat,
-  faTelegram,
-  faTiktok,
-  faTwitch,
-  faWhatsapp,
-  faXTwitter,
-  faYoutube,
-} from '@fortawesome/free-brands-svg-icons'
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useEffect, useRef, useState } from 'react'
 
-interface SocialSite {
-  domain: string
-  label: string
-  icon: IconDefinition
-}
-
-const SOCIAL_MEDIA_SITES: SocialSite[] = [
-  { domain: 'youtube.com', label: 'YouTube', icon: faYoutube },
-  { domain: 'facebook.com', label: 'Facebook', icon: faFacebook },
-  { domain: 'instagram.com', label: 'Instagram', icon: faInstagram },
-  { domain: 'x.com', label: 'X', icon: faXTwitter },
-  { domain: 'tiktok.com', label: 'TikTok', icon: faTiktok },
-  { domain: 'linkedin.com', label: 'LinkedIn', icon: faLinkedin },
-  { domain: 'reddit.com', label: 'Reddit', icon: faReddit },
-  { domain: 'snapchat.com', label: 'Snapchat', icon: faSnapchat },
-  { domain: 'pinterest.com', label: 'Pinterest', icon: faPinterest },
-  { domain: 'twitch.tv', label: 'Twitch', icon: faTwitch },
-  { domain: 'discord.com', label: 'Discord', icon: faDiscord },
-  { domain: 'whatsapp.com', label: 'WhatsApp', icon: faWhatsapp },
-  { domain: 'telegram.org', label: 'Telegram', icon: faTelegram },
-]
+import { KNOWN_SITES } from '../siteMetadata'
 
 interface SocialMediaComboboxProps {
   value: string
   onChange: (value: string) => void
+  onSelect?: (value: string) => void
   excludedDomains?: string[]
 }
 
-export function SocialMediaCombobox({ value, onChange, excludedDomains = [] }: SocialMediaComboboxProps) {
+export function SocialMediaCombobox({
+  value,
+  onChange,
+  onSelect,
+  excludedDomains = [],
+}: SocialMediaComboboxProps) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -54,10 +24,14 @@ export function SocialMediaCombobox({ value, onChange, excludedDomains = [] }: S
   const listRef = useRef<HTMLDivElement>(null)
 
   const query = value.trim().toLowerCase()
-  const filteredSites = SOCIAL_MEDIA_SITES.filter((site) => {
-    if (excludedDomains.includes(site.domain)) return false
+  const filteredSites = KNOWN_SITES.filter((site) => {
+    const siteDomains = [site.domain, ...(site.aliases ?? [])]
+    if (siteDomains.some((domain) => excludedDomains.includes(domain))) return false
     if (!query) return true
-    return site.label.toLowerCase().includes(query) || site.domain.toLowerCase().includes(query)
+    return (
+      site.label.toLowerCase().includes(query) ||
+      siteDomains.some((domain) => domain.toLowerCase().includes(query))
+    )
   })
 
   // Reset active index when the filtered list changes (user is typing)
@@ -79,30 +53,31 @@ export function SocialMediaCombobox({ value, onChange, excludedDomains = [] }: S
       }
     }
 
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setOpen(false)
-        setActiveIndex(-1)
-        inputRef.current?.blur()
-      }
-    }
-
     document.addEventListener('mousedown', handleClickOutside)
-    document.addEventListener('keydown', handleKeyDown)
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('keydown', handleKeyDown)
     }
   }, [])
 
   function handleSelect(domain: string) {
     onChange(domain)
+    onSelect?.(domain)
     setOpen(false)
     setActiveIndex(-1)
     inputRef.current?.focus()
   }
 
   function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Escape') {
+      if (open) {
+        event.preventDefault()
+        event.stopPropagation()
+        setOpen(false)
+        setActiveIndex(-1)
+      }
+      return
+    }
+
     if (!open || filteredSites.length === 0) return
 
     if (event.key === 'ArrowDown') {
@@ -119,7 +94,16 @@ export function SocialMediaCombobox({ value, onChange, excludedDomains = [] }: S
   }
 
   return (
-    <div ref={containerRef} className="relative flex-1">
+    <div
+      ref={containerRef}
+      className="relative flex-1"
+      onKeyDownCapture={(event) => {
+        if (event.key === 'Escape' && open) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+      }}
+    >
       <div className={`flex border border-foreground/20 bg-background ${open ? 'bg-foreground/5' : ''}`}>
         <input
           ref={inputRef}

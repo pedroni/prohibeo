@@ -1,7 +1,14 @@
 import { findMatchingRule } from '../shared/domains'
-import { getEnabledPresetSelectors, usesSectionHidingOnly } from '../shared/presets'
-import { formatScheduleSummary, getActiveSchedules, isSiteRuleBlockingNow } from '../shared/schedule'
-import { getSiteRules, watchSiteRules } from '../shared/storage'
+import { getEnabledPresetSelectors, hasSectionHiding, isRuleActiveOnPage, usesSectionHidingOnly } from '../shared/presets'
+import {
+  clearExpiredTemporaryBlocks,
+  formatCountdownDuration,
+  formatScheduleSummary,
+  getActiveSchedules,
+  getTemporaryBlockRemainingMs,
+  isSiteRuleBlockingNow,
+} from '../shared/schedule'
+import { getSiteRules, saveSiteRules, watchSiteRules } from '../shared/storage'
 import type { SiteRule } from '../shared/types'
 
 const HIDE_STYLE_ID = 'prohibeo-hide-style'
@@ -32,7 +39,7 @@ function ensureHideStyle(): HTMLStyleElement {
 }
 
 function applyHideStyle(rule: SiteRule | undefined): void {
-  if (!rule || !rule.enabled) {
+  if (!rule || !isRuleActiveOnPage(rule) || !hasSectionHiding(rule)) {
     removeHideStyle()
     return
   }
@@ -54,6 +61,10 @@ function applyHideStyle(rule: SiteRule | undefined): void {
 function removeBlockOverlay(): void {
   document.getElementById(OVERLAY_ID)?.remove()
   document.getElementById(SCROLL_LOCK_ID)?.remove()
+}
+
+function siteRulesChanged(left: SiteRule[], right: SiteRule[]): boolean {
+  return JSON.stringify(left) !== JSON.stringify(right)
 }
 
 // Styles live inside a Shadow DOM — the page's CSS cannot pierce in.
@@ -104,18 +115,29 @@ const SHADOW_CSS = `
     font-size: 16px;
     line-height: 1.5;
   }
+  .countdown {
+    font-weight: 700;
+  }
   @media (prefers-color-scheme: dark) {
     .shell { background: #131313; color: #e6e6e6; }
     .card { border-color: #525252; }
   }
 `
 
-function getBlockStatusText(rule: SiteRule): string {
+function getBlockStatusText(rule: SiteRule, at = new Date()): string {
+  const temporaryBlockRemainingMs = getTemporaryBlockRemainingMs(rule, at)
+
+  if (temporaryBlockRemainingMs !== null) {
+    return temporaryBlockRemainingMs > 0
+      ? `Temporary block - ${formatCountdownDuration(temporaryBlockRemainingMs)} remaining.`
+      : 'Temporary block ended.'
+  }
+
   if (rule.blockingMode === 'always') {
     return 'This website is always blocked.'
   }
 
-  const active = getActiveSchedules(rule)
+  const active = getActiveSchedules(rule, at)
 
   if (active.length === 1) {
     return `${active[0].name} — ${formatScheduleSummary(active[0])}`
@@ -128,16 +150,24 @@ function getBlockStatusText(rule: SiteRule): string {
   return 'This website is blocked.'
 }
 
-function applyBlockOverlay(rule: SiteRule): void {
-  const statusText = getBlockStatusText(rule)
+function applyBlockOverlay(rule: SiteRule, at = new Date()): void {
+  const statusText = getBlockStatusText(rule, at)
+  const temporaryBlockRemainingMs = getTemporaryBlockRemainingMs(rule, at)
 
   // If already showing, update text via shadow root (mode: 'open').
   const existing = document.getElementById(OVERLAY_ID)
   if (existing?.shadowRoot) {
     const h1 = existing.shadowRoot.querySelector('h1')
     const status = existing.shadowRoot.querySelector('.status')
+    const countdown = existing.shadowRoot.querySelector('.countdown')
     if (h1) h1.textContent = `${rule.domain} is blocked`
     if (status) status.textContent = statusText
+    if (countdown) {
+      countdown.textContent =
+        temporaryBlockRemainingMs !== null && temporaryBlockRemainingMs > 0
+          ? `${formatCountdownDuration(temporaryBlockRemainingMs)} left`
+          : ''
+    }
     return
   }
 
@@ -177,21 +207,28 @@ function applyBlockOverlay(rule: SiteRule): void {
   const hint = document.createElement('p')
   hint.textContent = 'Open the Prohibeo popup to change this rule.'
 
-  card.append(brand, heading, status, hint)
+  const countdown = document.createElement('p')
+  countdown.className = 'countdown'
+  countdown.textContent =
+    temporaryBlockRemainingMs !== null && temporaryBlockRemainingMs > 0
+      ? `${formatCountdownDuration(temporaryBlockRemainingMs)} left`
+      : ''
+
+  card.append(brand, heading, status, countdown, hint)
   shell.append(card)
   shadow.append(shadowStyle, shell)
   document.documentElement.append(overlay)
 }
 
-function applyMatchingRule(siteRules: SiteRule[]): void {
+function applyMatchingRule(siteRules: SiteRule[], at = new Date()): void {
   const matchingRule = findMatchingRule(siteRules, window.location.hostname)
 
   if (
     matchingRule &&
-    isSiteRuleBlockingNow(matchingRule) &&
+    isSiteRuleBlockingNow(matchingRule, at) &&
     !usesSectionHidingOnly(matchingRule.domain)
   ) {
-    applyBlockOverlay(matchingRule)
+    applyBlockOverlay(matchingRule, at)
     return
   }
 
@@ -201,8 +238,15 @@ function applyMatchingRule(siteRules: SiteRule[]): void {
 
 async function refreshRules(): Promise<void> {
   try {
+    const currentTime = new Date()
     const siteRules = await getSiteRules()
-    applyMatchingRule(siteRules)
+    const normalizedSiteRules = clearExpiredTemporaryBlocks(siteRules, currentTime)
+
+    if (siteRulesChanged(siteRules, normalizedSiteRules)) {
+      await saveSiteRules(normalizedSiteRules)
+    }
+
+    applyMatchingRule(normalizedSiteRules, currentTime)
   } catch (error) {
     console.error('Prohibeo failed to load rules.', error)
     removeHideStyle()
@@ -217,7 +261,7 @@ watchSiteRules((siteRules) => {
 
 window.setInterval(() => {
   void refreshRules()
-}, 60_000)
+}, 1_000)
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {

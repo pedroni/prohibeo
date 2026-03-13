@@ -9,9 +9,12 @@ import {
 } from '../../shared/presets'
 import {
   DEFAULT_SCHEDULE,
+  TEMPORARY_BLOCK_DURATION_MS,
+  formatCountdownDuration,
   WEEKDAY_LABELS,
   formatHourLabel,
   formatScheduleSummary,
+  getTemporaryBlockRemainingMs,
 } from '../../shared/schedule'
 import {
   WEEKDAY_ORDER,
@@ -27,6 +30,7 @@ import { TextInput } from '@ui/TextInput'
 import { Toggle } from './Toggle'
 
 type SiteSettingsPanelProps = {
+  now: Date
   rule: SiteRule
   onClose: () => void
   onChange: (nextRule: SiteRule) => void
@@ -154,6 +158,7 @@ function ScheduleForm({ values, nameError, onChange, onSave, onCancel }: Schedul
 }
 
 export function SiteSettingsPanel({
+  now,
   rule,
   onClose,
   onChange,
@@ -167,6 +172,8 @@ export function SiteSettingsPanel({
   const presetLabel = getPresetDisplayName(rule.domain)
   const presetOptions = useMemo(() => getPresetOptionsForDomain(rule.domain), [rule.domain])
   const sectionOnlyRule = usesSectionHidingOnly(rule.domain)
+  const temporaryBlockRemainingMs = getTemporaryBlockRemainingMs(rule, now)
+  const temporaryBlockActive = temporaryBlockRemainingMs !== null && temporaryBlockRemainingMs > 0
 
   function updateRule(nextRule: SiteRule): void {
     onChange({
@@ -180,6 +187,20 @@ export function SiteSettingsPanel({
       ...rule,
       blockingMode,
       enabled: blockingMode === 'always' ? true : rule.enabled,
+    })
+  }
+
+  function handleStartTemporaryBlock(): void {
+    updateRule({
+      ...rule,
+      temporaryBlockUntil: new Date(now.getTime() + TEMPORARY_BLOCK_DURATION_MS).toISOString(),
+    })
+  }
+
+  function handleClearTemporaryBlock(): void {
+    updateRule({
+      ...rule,
+      temporaryBlockUntil: null,
     })
   }
 
@@ -299,10 +320,7 @@ export function SiteSettingsPanel({
           Back
         </button>
 
-        <h2 className="text-2xl font-bold">Website Settings - {rule.domain}</h2>
-        <p className="text-sm text-muted-foreground">
-          Customize how this website appears and behaves.
-        </p>
+        <h2 className="text-2xl font-bold">{rule.domain}</h2>
       </header>
 
       <div className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
@@ -313,8 +331,8 @@ export function SiteSettingsPanel({
             <h3 className="text-lg font-bold">Blocking</h3>
             <p className="text-sm text-muted-foreground">
               {sectionOnlyRule
-                ? 'YouTube sections are hidden to reduce distractions. Switch to a strict schedule when needed.'
-                : 'New sites default to always blocked. Switch to a strict schedule when needed.'}
+                ? 'YouTube sections are hidden to reduce distractions. Switch to a strict schedule or start a temporary block when needed.'
+                : 'New sites default to always blocked. Switch to a strict schedule or start a temporary block when needed.'}
             </p>
           </div>
 
@@ -331,7 +349,33 @@ export function SiteSettingsPanel({
             >
               Scheduled blocking
             </Button>
+            <Button
+              variant={temporaryBlockActive ? 'primary' : 'secondary'}
+              onClick={handleStartTemporaryBlock}
+            >
+              Block for 1 hour
+            </Button>
           </div>
+
+          {temporaryBlockRemainingMs !== null ? (
+            <div className="border-t border-foreground/20 pt-3">
+              <p className="text-sm font-bold">
+                {temporaryBlockActive
+                  ? `Temporary block active - ${formatCountdownDuration(temporaryBlockRemainingMs)} left`
+                  : 'Temporary block ended'}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                When the timer ends, Prohibeo clears the temporary block automatically.
+              </p>
+              {temporaryBlockActive ? (
+                <div className="mt-3">
+                  <Button variant="secondary" onClick={handleClearTemporaryBlock}>
+                    Clear temporary block
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </section>
 
         {/* Schedules — separate section, only visible in scheduled mode */}
@@ -430,13 +474,14 @@ export function SiteSettingsPanel({
               {presetOptions.map((option) => (
                 <div
                   key={option.key}
-                  className="flex items-center justify-between gap-3 border-t border-foreground/20 pt-4 first:border-t-0 first:pt-0"
+                  className="flex items-start justify-between gap-3 border-t border-foreground/20 pt-4 first:border-t-0 first:pt-0"
                 >
-                  <div className="space-y-1">
+                  <div className="min-w-0 flex-1 space-y-1">
                     <p className="font-bold">{option.label}</p>
                     <p className="text-sm text-muted-foreground">{option.description}</p>
                   </div>
                   <Toggle
+                    className="mt-0.5 shrink-0"
                     checked={Boolean(rule.presetToggles[option.key])}
                     label={option.label}
                     onToggle={() => togglePresetOption(option.key)}

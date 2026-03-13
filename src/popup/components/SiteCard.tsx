@@ -1,32 +1,22 @@
-import { faXTwitter, faYoutube } from "@fortawesome/free-brands-svg-icons";
-import { faGear, faGlobe, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type { ReactNode } from "react";
+import { faGear, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { ReactNode } from 'react'
 
-import { Button } from "@ui/Button";
+import { Button } from '@ui/Button'
+import { getEnabledPresetLabels, usesSectionHidingOnly } from '../../shared/presets'
 import {
-  getEnabledPresetLabels,
-  usesSectionHidingOnly,
-} from "../../shared/presets";
-import { isSiteRuleBlockingNow } from "../../shared/schedule";
-import type { SiteRule } from "../../shared/types";
+  formatCountdownDuration,
+  getTemporaryBlockRemainingMs,
+  isSiteRuleBlockingNow,
+} from '../../shared/schedule'
+import type { SiteRule } from '../../shared/types'
+import { getSiteIcon } from '../siteMetadata'
 
 type SiteCardProps = {
-  rule: SiteRule;
-  onEdit: () => void;
-  onRemove: () => void;
-};
-
-function getSiteIcon(domain: string) {
-  if (domain === "youtube.com") {
-    return faYoutube;
-  }
-
-  if (domain === "x.com" || domain === "twitter.com") {
-    return faXTwitter;
-  }
-
-  return faGlobe;
+  now: Date
+  rule: SiteRule
+  onEdit: () => void
+  onRemove: () => void
 }
 
 function Badge({ children, active = false }: { children: ReactNode; active?: boolean }) {
@@ -34,20 +24,42 @@ function Badge({ children, active = false }: { children: ReactNode; active?: boo
     <span
       className={`border px-2 py-1 text-xs font-semibold ${
         active
-          ? "border-foreground bg-foreground text-background"
-          : "border-foreground/20 bg-background text-foreground"
+          ? 'border-foreground bg-foreground text-background'
+          : 'border-foreground/20 bg-background text-foreground'
       }`}
     >
       {children}
     </span>
-  );
+  )
 }
 
-export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
-  const enabledPresetLabels = getEnabledPresetLabels(rule);
-  const selectorCount = rule.customSelectors.length;
-  const blockingNow = isSiteRuleBlockingNow(rule);
-  const sectionOnlyRule = usesSectionHidingOnly(rule.domain);
+function getRuleLabel(rule: SiteRule, now: Date): string {
+  if (rule.temporaryBlockUntil !== null) {
+    const remainingMs = getTemporaryBlockRemainingMs(rule, now)
+
+    return remainingMs && remainingMs > 0
+      ? `Temporary - ${formatCountdownDuration(remainingMs)} left`
+      : 'Temporary block ended'
+  }
+
+  if (rule.blockingMode === 'always') {
+    return 'Always blocked'
+  }
+
+  if (rule.schedules.length === 0) {
+    return 'Scheduled - No schedules'
+  }
+
+  return rule.schedules.length === 1
+    ? `Scheduled - ${rule.schedules[0].name}`
+    : `Scheduled - ${rule.schedules.length} schedules`
+}
+
+export function SiteCard({ now, rule, onEdit, onRemove }: SiteCardProps) {
+  const enabledPresetLabels = getEnabledPresetLabels(rule)
+  const selectorCount = rule.customSelectors.length
+  const blockingNow = isSiteRuleBlockingNow(rule, now)
+  const sectionOnlyRule = usesSectionHidingOnly(rule.domain)
 
   return (
     <article className="border border-foreground/20 p-4">
@@ -60,15 +72,7 @@ export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
             <div className="min-w-0">
               <h2 className="truncate text-lg font-bold">{rule.domain}</h2>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {sectionOnlyRule && !rule.enabled
-                  ? "Sections hidden"
-                  : rule.blockingMode === "always"
-                    ? "Always blocked"
-                    : rule.schedules.length === 0
-                    ? "Scheduled • No schedules"
-                    : rule.schedules.length === 1
-                      ? `Scheduled • ${rule.schedules[0].name}`
-                      : `Scheduled • ${rule.schedules.length} schedules`}
+                {sectionOnlyRule && !rule.enabled ? 'Sections hidden' : getRuleLabel(rule, now)}
               </p>
             </div>
           </div>
@@ -94,7 +98,7 @@ export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Badge active={blockingNow}>
-          {blockingNow ? "Blocking now" : "Not blocking now"}
+          {blockingNow ? 'Blocking now' : 'Not blocking now'}
         </Badge>
 
         {enabledPresetLabels.map((label) => (
@@ -103,10 +107,10 @@ export function SiteCard({ rule, onEdit, onRemove }: SiteCardProps) {
 
         {selectorCount > 0 ? (
           <Badge>
-            {selectorCount} selector{selectorCount === 1 ? "" : "s"}
+            {selectorCount} selector{selectorCount === 1 ? '' : 's'}
           </Badge>
         ) : null}
       </div>
     </article>
-  );
+  )
 }

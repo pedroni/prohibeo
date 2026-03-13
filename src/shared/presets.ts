@@ -41,3 +41,11 @@ export function getEnabledPresetSelectors(rule: SiteRule): string[] {
     rule.presetToggles[option.key] ? option.selectors : [],
   )
 }
+
+export function hasSectionHiding(rule: SiteRule): boolean {
+  return getEnabledPresetSelectors(rule).length > 0 || rule.customSelectors.length > 0
+}
+
+export function isRuleActiveOnPage(rule: SiteRule): boolean {
+  return rule.enabled || hasSectionHiding(rule) || rule.temporaryBlockUntil !== null
+}

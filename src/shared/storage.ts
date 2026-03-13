@@ -108,6 +108,7 @@ function parseSiteRule(value: unknown, index: number): SiteRule {
     typeof value.domain !== 'string' ||
     typeof value.enabled !== 'boolean' ||
     !isBlockingMode(value.blockingMode) ||
+    !(typeof value.temporaryBlockUntil === 'string' || value.temporaryBlockUntil === null || value.temporaryBlockUntil === undefined) ||
     !Array.isArray(value.customSelectors) ||
     !value.customSelectors.every((selector) => typeof selector === 'string') ||
     typeof value.createdAt !== 'string' ||
@@ -127,6 +128,7 @@ function parseSiteRule(value: unknown, index: number): SiteRule {
     enabled: value.enabled,
     blockingMode: value.blockingMode,
     schedules,
+    temporaryBlockUntil: typeof value.temporaryBlockUntil === 'string' ? value.temporaryBlockUntil : null,
     presetToggles: parsePresetToggles(value.presetToggles, index),
     customSelectors: value.customSelectors,
     createdAt: value.createdAt,
@@ -163,6 +165,7 @@ export function createSiteRule(domain: string): SiteRule {
     enabled: !sectionOnlyRule,
     blockingMode: sectionOnlyRule ? 'scheduled' : 'always',
     schedules: [],
+    temporaryBlockUntil: null,
     presetToggles: createDefaultPresetToggles(domain),
     customSelectors: [],
     createdAt: timestamp,

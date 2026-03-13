@@ -10,7 +10,7 @@ export const WEEKDAY_ORDER = [
 
 export type Weekday = (typeof WEEKDAY_ORDER)[number]
 
-export const BLOCKING_MODES = ['always', 'scheduled'] as const
+export const BLOCKING_MODES = ['always', 'scheduled', 'temporary'] as const
 
 export type BlockingMode = (typeof BLOCKING_MODES)[number]
 
@@ -44,6 +44,7 @@ export type SiteRule = {
   enabled: boolean
   blockingMode: BlockingMode
   schedules: NamedSchedule[]
+  temporaryBlockUntil: string | null
   presetToggles: PresetToggles
   customSelectors: string[]
   createdAt: string

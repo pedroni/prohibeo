@@ -26,6 +26,8 @@ export const DEFAULT_SCHEDULE: StrictSchedule = {
   endHour: 17,
 }
 
+export const TEMPORARY_BLOCK_DURATION_MS = 60 * 60 * 1000
+
 export function getWeekdayForDate(date: Date): Weekday {
   return JAVASCRIPT_DAY_TO_WEEKDAY[date.getDay()]
 }
@@ -64,6 +66,10 @@ export function isScheduleActive(schedule: StrictSchedule, at = new Date()): boo
 }
 
 export function isSiteRuleBlockingNow(rule: SiteRule, at = new Date()): boolean {
+  if (isTemporaryBlockActive(rule, at)) {
+    return true
+  }
+
   if (!rule.enabled) {
     return false
   }
@@ -88,6 +94,59 @@ export function formatHourLabel(hour: number): string {
   const normalized = hour % 12 === 0 ? 12 : hour % 12
 
   return `${normalized}:00 ${suffix}`
+}
+
+export function getTemporaryBlockRemainingMs(rule: SiteRule, at = new Date()): number | null {
+  if (typeof rule.temporaryBlockUntil !== 'string') {
+    return null
+  }
+
+  const endTimestamp = new Date(rule.temporaryBlockUntil).getTime()
+
+  if (Number.isNaN(endTimestamp)) {
+    return 0
+  }
+
+  return Math.max(0, endTimestamp - at.getTime())
+}
+
+export function clearExpiredTemporaryBlock(rule: SiteRule, at = new Date()): SiteRule {
+  if (rule.temporaryBlockUntil === null) {
+    return rule
+  }
+
+  if (getTemporaryBlockRemainingMs(rule, at) !== 0) {
+    return rule
+  }
+
+  return {
+    ...rule,
+    temporaryBlockUntil: null,
+    updatedAt: at.toISOString(),
+  }
+}
+
+export function clearExpiredTemporaryBlocks(siteRules: SiteRule[], at = new Date()): SiteRule[] {
+  return siteRules.map((rule) => clearExpiredTemporaryBlock(rule, at))
+}
+
+export function isTemporaryBlockActive(rule: SiteRule, at = new Date()): boolean {
+  const remainingMs = getTemporaryBlockRemainingMs(rule, at)
+
+  return Boolean(remainingMs !== null && remainingMs > 0)
+}
+
+export function formatCountdownDuration(milliseconds: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000))
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  }
+
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
 }
 
 export function formatWeekdaySummary(weekdays: Weekday[]): string {
