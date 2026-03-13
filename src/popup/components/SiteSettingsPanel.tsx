@@ -9,7 +9,6 @@ import {
 } from '../../shared/presets'
 import {
   DEFAULT_SCHEDULE,
-  TEMPORARY_BLOCK_DURATION_MS,
   formatCountdownDuration,
   WEEKDAY_LABELS,
   formatHourLabel,
@@ -165,6 +164,8 @@ export function SiteSettingsPanel({
 }: SiteSettingsPanelProps) {
   const [selectorInput, setSelectorInput] = useState('')
   const [selectorError, setSelectorError] = useState<string | null>(null)
+  const [temporaryMinutes, setTemporaryMinutes] = useState('60')
+  const [temporaryMinutesError, setTemporaryMinutesError] = useState<string | null>(null)
   const [scheduleFormState, setScheduleFormState] = useState<ScheduleFormState>({ mode: 'idle' })
   const [scheduleFormValues, setScheduleFormValues] = useState<ScheduleFormValues>(DEFAULT_FORM_VALUES)
   const [scheduleNameError, setScheduleNameError] = useState<string | null>(null)
@@ -182,18 +183,75 @@ export function SiteSettingsPanel({
     })
   }
 
-  function handleBlockingModeChange(blockingMode: BlockingMode): void {
+  function getTemporaryDurationMs(): number | null {
+    const normalizedMinutes = temporaryMinutes.trim()
+
+    if (!/^\d+$/.test(normalizedMinutes)) {
+      setTemporaryMinutesError('Enter the number of minutes to block for.')
+      return null
+    }
+
+    const parsedMinutes = Number.parseInt(normalizedMinutes, 10)
+
+    if (parsedMinutes <= 0) {
+      setTemporaryMinutesError('Minutes must be greater than 0.')
+      return null
+    }
+
+    setTemporaryMinutesError(null)
+    return parsedMinutes * 60 * 1000
+  }
+
+  function handleBlockingModeChange(blockingMode: Exclude<BlockingMode, 'temporary'>): void {
     updateRule({
       ...rule,
       blockingMode,
-      enabled: blockingMode === 'always' ? true : rule.enabled,
+      temporaryBlockUntil: null,
     })
   }
 
   function handleStartTemporaryBlock(): void {
+    const temporaryDurationMs = getTemporaryDurationMs()
+
+    if (temporaryDurationMs === null) {
+      return
+    }
+
     updateRule({
       ...rule,
-      temporaryBlockUntil: new Date(now.getTime() + TEMPORARY_BLOCK_DURATION_MS).toISOString(),
+      blockingMode: 'temporary',
+      temporaryBlockUntil: new Date(now.getTime() + temporaryDurationMs).toISOString(),
+    })
+  }
+
+  function handleTemporaryMinutesChange(nextValue: string): void {
+    setTemporaryMinutes(nextValue)
+
+    if (temporaryMinutesError) {
+      setTemporaryMinutesError(null)
+    }
+
+    if (rule.blockingMode !== 'temporary') {
+      return
+    }
+
+    const normalizedMinutes = nextValue.trim()
+
+    if (!/^\d+$/.test(normalizedMinutes)) {
+      return
+    }
+
+    const parsedMinutes = Number.parseInt(normalizedMinutes, 10)
+
+    if (parsedMinutes <= 0) {
+      return
+    }
+
+    const restartedAt = new Date()
+
+    updateRule({
+      ...rule,
+      temporaryBlockUntil: new Date(restartedAt.getTime() + parsedMinutes * 60 * 1000).toISOString(),
     })
   }
 
@@ -331,8 +389,8 @@ export function SiteSettingsPanel({
             <h3 className="text-lg font-bold">Blocking</h3>
             <p className="text-sm text-muted-foreground">
               {sectionOnlyRule
-                ? 'YouTube sections are hidden to reduce distractions. Switch to a strict schedule or start a temporary block when needed.'
-                : 'New sites default to always blocked. Switch to a strict schedule or start a temporary block when needed.'}
+                ? 'YouTube sections are hidden to reduce distractions. Switch to a schedule or start a temporary timer when needed.'
+                : 'Choose whether this site stays blocked, follows a schedule, or uses a temporary timer.'}
             </p>
           </div>
 
@@ -341,42 +399,58 @@ export function SiteSettingsPanel({
               variant={rule.blockingMode === 'always' ? 'primary' : 'secondary'}
               onClick={() => handleBlockingModeChange('always')}
             >
-              Always block
+              Always
             </Button>
             <Button
               variant={rule.blockingMode === 'scheduled' ? 'primary' : 'secondary'}
               onClick={() => handleBlockingModeChange('scheduled')}
             >
-              Scheduled blocking
+              Scheduled
             </Button>
             <Button
-              variant={temporaryBlockActive ? 'primary' : 'secondary'}
+              variant={rule.blockingMode === 'temporary' ? 'primary' : 'secondary'}
               onClick={handleStartTemporaryBlock}
             >
-              Block for 1 hour
+              Temporary
             </Button>
           </div>
 
-          {temporaryBlockRemainingMs !== null ? (
-            <div className="border-t border-foreground/20 pt-3">
-              <p className="text-sm font-bold">
-                {temporaryBlockActive
-                  ? `Temporary block active - ${formatCountdownDuration(temporaryBlockRemainingMs)} left`
-                  : 'Temporary block ended'}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                When the timer ends, Prohibeo clears the temporary block automatically.
-              </p>
-              {temporaryBlockActive ? (
-                <div className="mt-3">
-                  <Button variant="secondary" onClick={handleClearTemporaryBlock}>
-                    Clear temporary block
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
         </section>
+
+        {rule.blockingMode === 'temporary' ? (
+          <section className="space-y-3 border border-foreground/20 p-4">
+            <div>
+              <h3 className="text-lg font-bold">Temporary active</h3>
+              <p className="text-sm text-muted-foreground">
+                {temporaryBlockActive
+                  ? `${formatCountdownDuration(temporaryBlockRemainingMs)} left. Prohibeo clears the timer automatically when it ends.`
+                  : 'Set the timer in minutes. Changing the value restarts the countdown.'}
+              </p>
+            </div>
+
+            <label className="space-y-1 text-sm font-bold">
+              <span>Minutes</span>
+              <TextInput
+                type="number"
+                min={1}
+                inputMode="numeric"
+                value={temporaryMinutes}
+                onChange={(event) => handleTemporaryMinutesChange(event.target.value)}
+                placeholder="60"
+              />
+            </label>
+
+            {temporaryMinutesError ? (
+              <p className="text-sm font-semibold text-foreground">{temporaryMinutesError}</p>
+            ) : null}
+
+            <div>
+              <Button variant="secondary" onClick={handleClearTemporaryBlock}>
+                Clear temporary
+              </Button>
+            </div>
+          </section>
+        ) : null}
 
         {/* Schedules — separate section, only visible in scheduled mode */}
         {rule.blockingMode === 'scheduled' ? (

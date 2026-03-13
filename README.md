@@ -255,6 +255,22 @@ Cloudflare Pages as the default target.
 For production SEO metadata, canonicals, and sitemap generation, set `SITE_URL` to the
 final site origin during deployment.
 
+Auto-deploys for the landing page are configured with GitHub Actions in
+`.github/workflows/deploy-site.yml`.
+
+The workflow:
+
+- runs on pushes to `main`
+- only triggers when site-related files change
+- installs dependencies with `npm ci`
+- builds `site/` with `SITE_URL=https://prohibeo.com`
+- deploys `site/dist` to the Cloudflare Pages project `prohibeo`
+
+The deploy workflow expects these GitHub Actions secrets:
+
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+
 ## License
 
 This project is licensed under the `MIT` License. See `LICENSE` for details.

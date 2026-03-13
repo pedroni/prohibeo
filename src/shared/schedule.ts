@@ -26,8 +26,6 @@ export const DEFAULT_SCHEDULE: StrictSchedule = {
   endHour: 17,
 }
 
-export const TEMPORARY_BLOCK_DURATION_MS = 60 * 60 * 1000
-
 export function getWeekdayForDate(date: Date): Weekday {
   return JAVASCRIPT_DAY_TO_WEEKDAY[date.getDay()]
 }
@@ -66,23 +64,19 @@ export function isScheduleActive(schedule: StrictSchedule, at = new Date()): boo
 }
 
 export function isSiteRuleBlockingNow(rule: SiteRule, at = new Date()): boolean {
-  if (isTemporaryBlockActive(rule, at)) {
-    return true
-  }
-
-  if (!rule.enabled) {
-    return false
-  }
-
   if (rule.blockingMode === 'always') {
     return true
+  }
+
+  if (rule.blockingMode === 'temporary') {
+    return isTemporaryBlockActive(rule, at)
   }
 
   return rule.schedules.some((schedule) => isScheduleActive(schedule, at))
 }
 
 export function getActiveSchedules(rule: SiteRule, at = new Date()): NamedSchedule[] {
-  if (!rule.enabled || rule.blockingMode !== 'scheduled') {
+  if (rule.blockingMode !== 'scheduled') {
     return []
   }
 

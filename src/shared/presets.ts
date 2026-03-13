@@ -47,5 +47,5 @@ export function hasSectionHiding(rule: SiteRule): boolean {
 }
 
 export function isRuleActiveOnPage(rule: SiteRule): boolean {
-  return rule.enabled || hasSectionHiding(rule) || rule.temporaryBlockUntil !== null
+  return rule.blockingMode === 'always' || rule.blockingMode === 'temporary' || hasSectionHiding(rule)
 }

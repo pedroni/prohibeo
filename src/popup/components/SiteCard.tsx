@@ -34,12 +34,12 @@ function Badge({ children, active = false }: { children: ReactNode; active?: boo
 }
 
 function getRuleLabel(rule: SiteRule, now: Date): string {
-  if (rule.temporaryBlockUntil !== null) {
+  if (rule.blockingMode === 'temporary') {
     const remainingMs = getTemporaryBlockRemainingMs(rule, now)
 
     return remainingMs && remainingMs > 0
       ? `Temporary - ${formatCountdownDuration(remainingMs)} left`
-      : 'Temporary block ended'
+      : 'Temporary'
   }
 
   if (rule.blockingMode === 'always') {
@@ -72,7 +72,9 @@ export function SiteCard({ now, rule, onEdit, onRemove }: SiteCardProps) {
             <div className="min-w-0">
               <h2 className="truncate text-lg font-bold">{rule.domain}</h2>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {sectionOnlyRule && !rule.enabled ? 'Sections hidden' : getRuleLabel(rule, now)}
+                {sectionOnlyRule && rule.blockingMode === 'scheduled' && rule.schedules.length === 0
+                  ? 'Sections hidden'
+                  : getRuleLabel(rule, now)}
               </p>
             </div>
           </div>

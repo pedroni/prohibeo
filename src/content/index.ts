@@ -125,7 +125,8 @@ const SHADOW_CSS = `
 `
 
 function getBlockStatusText(rule: SiteRule, at = new Date()): string {
-  const temporaryBlockRemainingMs = getTemporaryBlockRemainingMs(rule, at)
+  const temporaryBlockRemainingMs =
+    rule.blockingMode === 'temporary' ? getTemporaryBlockRemainingMs(rule, at) : null
 
   if (temporaryBlockRemainingMs !== null) {
     return temporaryBlockRemainingMs > 0
@@ -152,7 +153,8 @@ function getBlockStatusText(rule: SiteRule, at = new Date()): string {
 
 function applyBlockOverlay(rule: SiteRule, at = new Date()): void {
   const statusText = getBlockStatusText(rule, at)
-  const temporaryBlockRemainingMs = getTemporaryBlockRemainingMs(rule, at)
+  const temporaryBlockRemainingMs =
+    rule.blockingMode === 'temporary' ? getTemporaryBlockRemainingMs(rule, at) : null
 
   // If already showing, update text via shadow root (mode: 'open').
   const existing = document.getElementById(OVERLAY_ID)
