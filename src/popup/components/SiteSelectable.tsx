@@ -29,6 +29,7 @@ export function SiteSelectable({
         label: site.label,
         meta: site.domain,
         icon: <FontAwesomeIcon icon={site.icon} />,
+        iconActiveClassName: site.iconActiveClassName,
       })),
     [excludedDomains],
   )

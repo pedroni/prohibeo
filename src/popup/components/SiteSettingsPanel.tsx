@@ -40,6 +40,7 @@ type SiteSettingsPanelProps = {
   rule: SiteRule
   schedules: NamedSchedule[]
   siteRules: SiteRule[]
+  errorMessage: string | null
   onClose: () => void
   onChange: (nextRule: SiteRule) => void
   onAttachSchedule: (siteRuleId: string, scheduleId: string) => void
@@ -201,6 +202,7 @@ export function SiteSettingsPanel({
   rule,
   schedules,
   siteRules,
+  errorMessage,
   onClose,
   onChange,
   onAttachSchedule,
@@ -449,7 +451,7 @@ export function SiteSettingsPanel({
   }
 
   return (
-    <section className="absolute inset-0 z-10 flex flex-col bg-background pb-4 text-foreground">
+    <section className="flex h-full flex-col bg-background pb-4 text-foreground">
       <header className="border-b border-foreground/20 gap-4 flex items-center px-4 py-4">
         <button
           type="button"
@@ -464,6 +466,8 @@ export function SiteSettingsPanel({
       </header>
 
       <div className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
+        {errorMessage ? <p className="text-sm font-semibold text-red-500">{errorMessage}</p> : null}
+
         <section className="space-y-3 border border-foreground/20 p-4">
           <div>
             <h3 className="text-lg font-bold">Blocking</h3>

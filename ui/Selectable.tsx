@@ -8,6 +8,7 @@ export type SelectableOption<TValue extends string> = {
   label: string
   meta?: string
   icon?: ReactNode
+  iconActiveClassName?: string
 }
 
 type SelectableProps<TValue extends string> = {
@@ -184,7 +185,11 @@ export function Selectable<TValue extends string>({
                 onMouseEnter={() => setActiveIndex(index)}
               >
                 {option.icon ? (
-                  <span className="flex w-4 shrink-0 items-center justify-center text-foreground">
+                  <span
+                    className={`flex w-4 shrink-0 items-center justify-center text-muted-foreground transition-colors ${
+                      index === activeIndex ? option.iconActiveClassName ?? '' : ''
+                    }`}
+                  >
                     {option.icon}
                   </span>
                 ) : null}

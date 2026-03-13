@@ -12,7 +12,10 @@ import {
 } from '../../shared/schedule'
 import { resolveSchedulesForRule } from '../../shared/storage'
 import type { NamedSchedule, SiteRule } from '../../shared/types'
-import { getSiteIcon } from '../siteMetadata'
+import {
+  getSiteIcon,
+  getSiteIconHoverClassName,
+} from '../siteMetadata'
 
 type SiteCardProps = {
   now: Date
@@ -74,12 +77,15 @@ export function SiteCard({ now, rule, schedules, onEdit, onRemove }: SiteCardPro
   const blockingNow = isSiteRuleBlockingNow(resolvedRule, now)
 
   return (
-    <article className="border border-foreground/20 p-4">
+    <article className="group border border-foreground/20 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-3">
             <span className="inline-flex h-9 w-9! shrink-0 items-center justify-center border border-foreground/20">
-              <FontAwesomeIcon icon={getSiteIcon(rule.domain)} />
+              <FontAwesomeIcon
+                icon={getSiteIcon(rule.domain)}
+                className={`text-muted-foreground transition-colors ${getSiteIconHoverClassName(rule.domain)}`}
+              />
             </span>
             <div className="min-w-0">
               <h2 className="truncate text-lg font-bold">{rule.domain}</h2>

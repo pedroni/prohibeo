@@ -1,8 +1,5 @@
-import { faPlus } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useEffect, useMemo, useState } from 'react'
 
-import logoUrl from '../assets/logo.png'
 import { normalizeDomainInput } from '../shared/domains'
 import { clearExpiredTemporaryBlocks } from '../shared/schedule'
 import {
@@ -13,9 +10,7 @@ import {
 } from '../shared/storage'
 import type { ExtensionData, NamedSchedule, SiteRule } from '../shared/types'
 
-import { Button } from '@ui/Button'
-import { SiteSelectable } from './components/SiteSelectable'
-import { SiteCard } from './components/SiteCard'
+import { HomeScreen } from './components/HomeScreen'
 import { SiteSettingsPanel } from './components/SiteSettingsPanel'
 
 function pruneUnusedSchedules(siteRules: SiteRule[], schedules: NamedSchedule[]): NamedSchedule[] {
@@ -48,7 +43,6 @@ function siteRulesChanged(left: SiteRule[], right: SiteRule[]): boolean {
 
 export default function App() {
   const [extensionData, setExtensionData] = useState<ExtensionData>({ siteRules: [], schedules: [] })
-  const [websiteInput, setWebsiteInput] = useState('')
   const [selectedSiteRuleId, setSelectedSiteRuleId] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -131,19 +125,15 @@ export default function App() {
     await saveExtensionData(normalized)
   }
 
-  async function handleAddWebsite(event: React.FormEvent<HTMLFormElement>): Promise<void> {
-    event.preventDefault()
-    await addWebsite(websiteInput)
-  }
-
   async function addWebsite(rawInput: string): Promise<void> {
     try {
       const normalizedDomain = normalizeDomainInput(rawInput)
       const existingSiteRule = siteRules.find((siteRule) => siteRule.domain === normalizedDomain)
 
       if (existingSiteRule) {
+        setErrorMessage(null)
         setSelectedSiteRuleId(existingSiteRule.id)
-        throw new Error(`${normalizedDomain} is already in Prohibeo.`)
+        return
       }
 
       const nextSiteRule = createSiteRule(normalizedDomain)
@@ -151,7 +141,6 @@ export default function App() {
         siteRules: [...siteRules, nextSiteRule],
         schedules,
       })
-      setWebsiteInput('')
       setSelectedSiteRuleId(nextSiteRule.id)
       setErrorMessage(null)
     } catch (error) {
@@ -259,102 +248,14 @@ export default function App() {
   }
 
   return (
-    <div className="relative h-[560px] w-[420px] overflow-hidden bg-background text-foreground">
-      <div className="flex h-full flex-col">
-        <header className="sticky top-0 z-10 border-b border-foreground/20 bg-background px-4 py-4">
-          <div className="flex min-h-10 items-center gap-4">
-            <img
-              src={logoUrl}
-              alt="Prohibeo logo"
-              className="h-10 w-10 border border-foreground/20 object-cover"
-            />
-            <div>
-              <h1 className="text-2xl font-bold leading-none">Prohibeo</h1>
-              <p className="min-w-0 overflow-hidden text-sm leading-5 text-muted-foreground">
-                Block websites and hide distracting sections.
-              </p>
-            </div>
-          </div>
-        </header>
-
-        <main className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          <div className="space-y-3">
-            <form onSubmit={handleAddWebsite} className="space-y-3 border border-foreground/20 p-4">
-              <div>
-                <h2 className="text-lg font-bold">Website to block</h2>
-                <p className="text-sm text-muted-foreground">
-                  Add a URL or domain. YouTube hides distracting sections while keeping the site
-                  accessible. Other sites show a block screen.
-                </p>
-              </div>
-
-              {errorMessage ? <p className="text-sm font-semibold text-red-500">{errorMessage}</p> : null}
-
-              <div className="flex gap-2">
-                <SiteSelectable
-                  value={websiteInput}
-                  excludedDomains={siteRules.map((rule) => rule.domain)}
-                  onChange={(value) => {
-                    setWebsiteInput(value)
-
-                    if (errorMessage) {
-                      setErrorMessage(null)
-                    }
-                  }}
-                  onSelect={(value) => {
-                    void addWebsite(value)
-                  }}
-                />
-                <Button type="submit">
-                  <FontAwesomeIcon icon={faPlus} />
-                  Add
-                </Button>
-              </div>
-            </form>
-
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">Blocked websites</h2>
-              <p className="text-sm text-muted-foreground">
-                {siteRules.length} site{siteRules.length === 1 ? '' : 's'}
-              </p>
-            </div>
-
-            {isLoading ? <p className="text-sm text-muted-foreground">Loading your settings...</p> : null}
-
-            {!isLoading && siteRules.length === 0 ? (
-              <div className="border border-foreground/20 p-4">
-                <p className="text-base font-bold">No websites added yet.</p>
-                <p className="text-sm text-muted-foreground">
-                  Add a domain to start blocking full pages or hiding specific sections.
-                </p>
-              </div>
-            ) : null}
-
-            <div className="space-y-3">
-              {siteRules.map((siteRule) => (
-                <SiteCard
-                  key={siteRule.id}
-                  now={currentTime}
-                  rule={siteRule}
-                  schedules={schedules}
-                  onEdit={() => setSelectedSiteRuleId(siteRule.id)}
-                  onRemove={() => {
-                    void handleRemoveSiteRule(siteRule.id)
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        </main>
-      </div>
-
+    <div className="h-[560px] w-[420px] overflow-hidden bg-background text-foreground">
       {selectedSiteRule ? (
         <SiteSettingsPanel
-          key={selectedSiteRule.id}
           now={currentTime}
           rule={selectedSiteRule}
           schedules={schedules}
           siteRules={siteRules}
+          errorMessage={errorMessage}
           onClose={() => setSelectedSiteRuleId(null)}
           onChange={(nextSiteRule) => {
             void handleUpdateSiteRule(nextSiteRule)
@@ -372,7 +273,21 @@ export default function App() {
             void handleUpdateSchedules(nextSchedules)
           }}
         />
-      ) : null}
+      ) : (
+        <HomeScreen
+          now={currentTime}
+          siteRules={siteRules}
+          schedules={schedules}
+          isLoading={isLoading}
+          errorMessage={errorMessage}
+          onClearError={() => setErrorMessage(null)}
+          onAddWebsite={addWebsite}
+          onEditSiteRule={setSelectedSiteRuleId}
+          onRemoveSiteRule={(siteRuleId) => {
+            void handleRemoveSiteRule(siteRuleId)
+          }}
+        />
+      )}
     </div>
   )
 }
