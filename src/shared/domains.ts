@@ -1,5 +1,6 @@
 import { getDomain } from 'tldts'
 
+import { canonicalizeKnownSiteDomain, getKnownSiteDomains } from './knownSites'
 import { resolveSiteRules } from './storage'
 import type { NamedSchedule, ResolvedSiteRule, SiteRule } from './types'
 
@@ -24,7 +25,9 @@ export function normalizeDomainInput(input: string): string {
   const registrableDomain = getDomain(parsedUrl.hostname, {
     allowPrivateDomains: true,
   })
-  const normalizedDomain = (registrableDomain ?? parsedUrl.hostname).toLowerCase()
+  const normalizedDomain = canonicalizeKnownSiteDomain(
+    (registrableDomain ?? parsedUrl.hostname).toLowerCase(),
+  )
 
   if (!normalizedDomain.includes('.')) {
     throw new Error('Enter a valid public website domain.')
@@ -35,12 +38,15 @@ export function normalizeDomainInput(input: string): string {
 
 export function domainMatches(hostname: string, domain: string): boolean {
   const normalizedHostname = hostname.toLowerCase()
-  const normalizedDomain = domain.toLowerCase()
 
-  return (
-    normalizedHostname === normalizedDomain ||
-    normalizedHostname.endsWith(`.${normalizedDomain}`)
-  )
+  return getKnownSiteDomains(domain).some((candidateDomain) => {
+    const normalizedDomain = candidateDomain.toLowerCase()
+
+    return (
+      normalizedHostname === normalizedDomain ||
+      normalizedHostname.endsWith(`.${normalizedDomain}`)
+    )
+  })
 }
 
 export function findMatchingRule(

@@ -77,6 +77,37 @@ export function isSiteRuleBlockingNow(rule: ResolvedSiteRule, at = new Date()): 
   return rule.schedules.some((schedule) => isScheduleActive(schedule, at))
 }
 
+function getNextHourBoundary(at: Date): Date {
+  const nextBoundary = new Date(at)
+
+  nextBoundary.setMinutes(0, 0, 0)
+  nextBoundary.setHours(nextBoundary.getHours() + 1)
+
+  return nextBoundary
+}
+
+export function getNextScheduleTransition(schedule: StrictSchedule, at = new Date()): Date | null {
+  if (schedule.weekdays.length === 0) {
+    return null
+  }
+
+  const boundary = getNextHourBoundary(at)
+  const horizon = boundary.getTime() + 8 * 24 * 60 * 60 * 1000
+
+  for (let timestamp = boundary.getTime(); timestamp <= horizon; timestamp += 60 * 60 * 1000) {
+    const currentBoundary = new Date(timestamp)
+
+    if (
+      isScheduleActive(schedule, new Date(currentBoundary.getTime() - 1)) !==
+      isScheduleActive(schedule, currentBoundary)
+    ) {
+      return currentBoundary
+    }
+  }
+
+  return null
+}
+
 export function getActiveSchedules(rule: ResolvedSiteRule, at = new Date()): NamedSchedule[] {
   if (rule.blockingMode !== 'scheduled') {
     return []
@@ -104,6 +135,34 @@ export function getTemporaryBlockRemainingMs(rule: TemporaryRule, at = new Date(
   }
 
   return Math.max(0, endTimestamp - at.getTime())
+}
+
+export function getNextRuleTransition(rule: ResolvedSiteRule, at = new Date()): Date | null {
+  if (rule.blockingMode === 'always') {
+    return null
+  }
+
+  if (rule.blockingMode === 'temporary') {
+    if (typeof rule.temporaryBlockUntil !== 'string') {
+      return null
+    }
+
+    const endTimestamp = new Date(rule.temporaryBlockUntil)
+
+    return Number.isNaN(endTimestamp.getTime()) || endTimestamp.getTime() <= at.getTime()
+      ? null
+      : endTimestamp
+  }
+
+  const nextTransitions = rule.schedules
+    .map((schedule) => getNextScheduleTransition(schedule, at))
+    .filter((transition): transition is Date => transition !== null)
+
+  if (nextTransitions.length === 0) {
+    return null
+  }
+
+  return new Date(Math.min(...nextTransitions.map((transition) => transition.getTime())))
 }
 
 export function clearExpiredTemporaryBlock(rule: SiteRule, at = new Date()): SiteRule {

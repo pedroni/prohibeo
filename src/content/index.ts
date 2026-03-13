@@ -9,6 +9,7 @@ import {
   formatCountdownDuration,
   formatScheduleSummary,
   getActiveSchedules,
+  getNextRuleTransition,
   getTemporaryBlockRemainingMs,
   isSiteRuleBlockingNow,
 } from '../shared/schedule'
@@ -17,11 +18,14 @@ import {
   saveExtensionData,
   watchExtensionData,
 } from '../shared/storage'
-import type { ResolvedSiteRule, SiteRule } from '../shared/types'
+import type { ExtensionData, ResolvedSiteRule, SiteRule } from '../shared/types'
 
 const HIDE_STYLE_ID = 'prohibeo-hide-style'
 const OVERLAY_ID = 'prohibeo-block-overlay'
 const SCROLL_LOCK_ID = 'prohibeo-scroll-lock'
+const TRANSITION_REFRESH_BUFFER_MS = 250
+
+let scheduledRefreshId: number | null = null
 
 function getUniqueSelectors(rule: SiteRule): string[] {
   return [...new Set([...getEnabledPresetSelectors(rule), ...rule.customSelectors])]
@@ -69,6 +73,30 @@ function applyHideStyle(rule: ResolvedSiteRule | undefined): void {
 function removeBlockOverlay(): void {
   document.getElementById(OVERLAY_ID)?.remove()
   document.getElementById(SCROLL_LOCK_ID)?.remove()
+}
+
+function clearScheduledRefresh(): void {
+  if (scheduledRefreshId === null) {
+    return
+  }
+
+  window.clearTimeout(scheduledRefreshId)
+  scheduledRefreshId = null
+}
+
+function scheduleRefreshAt(nextRefreshAt: Date | null): void {
+  clearScheduledRefresh()
+
+  if (nextRefreshAt === null) {
+    return
+  }
+
+  const delayMs = Math.max(0, nextRefreshAt.getTime() - Date.now()) + TRANSITION_REFRESH_BUFFER_MS
+
+  scheduledRefreshId = window.setTimeout(() => {
+    scheduledRefreshId = null
+    void refreshRules()
+  }, delayMs)
 }
 
 function siteRulesChanged(left: SiteRule[], right: SiteRule[]): boolean {
@@ -245,24 +273,28 @@ function applyMatchingRule(siteRules: SiteRule[], schedules: ResolvedSiteRule['s
 
   removeBlockOverlay()
   applyHideStyle(blockingNow ? matchingRule : undefined)
+  scheduleRefreshAt(matchingRule ? getNextRuleTransition(matchingRule, at) : null)
+}
+
+async function syncExtensionData(extensionData: ExtensionData, at = new Date()): Promise<void> {
+  const normalizedSiteRules = clearExpiredTemporaryBlocks(extensionData.siteRules, at)
+
+  if (siteRulesChanged(extensionData.siteRules, normalizedSiteRules)) {
+    await saveExtensionData({
+      ...extensionData,
+      siteRules: normalizedSiteRules,
+    })
+  }
+
+  applyMatchingRule(normalizedSiteRules, extensionData.schedules, at)
 }
 
 async function refreshRules(): Promise<void> {
   try {
-    const currentTime = new Date()
-    const extensionData = await getExtensionData()
-    const normalizedSiteRules = clearExpiredTemporaryBlocks(extensionData.siteRules, currentTime)
-
-    if (siteRulesChanged(extensionData.siteRules, normalizedSiteRules)) {
-      await saveExtensionData({
-        ...extensionData,
-        siteRules: normalizedSiteRules,
-      })
-    }
-
-    applyMatchingRule(normalizedSiteRules, extensionData.schedules, currentTime)
+    await syncExtensionData(await getExtensionData(), new Date())
   } catch (error) {
     console.error('Prohibeo failed to load rules.', error)
+    clearScheduledRefresh()
     removeBlockOverlay()
     removeHideStyle()
   }
@@ -271,12 +303,13 @@ async function refreshRules(): Promise<void> {
 void refreshRules()
 
 watchExtensionData((extensionData) => {
-  applyMatchingRule(extensionData.siteRules, extensionData.schedules)
+  void syncExtensionData(extensionData, new Date()).catch((error) => {
+    console.error('Prohibeo failed to sync updated rules.', error)
+    clearScheduledRefresh()
+    removeBlockOverlay()
+    removeHideStyle()
+  })
 })
-
-window.setInterval(() => {
-  void refreshRules()
-}, 1_000)
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {

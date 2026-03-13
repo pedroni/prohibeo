@@ -16,33 +16,37 @@ import {
 } from '@fortawesome/free-brands-svg-icons'
 import { faGlobe } from '@fortawesome/free-solid-svg-icons'
 
-export interface KnownSite {
-  domain: string
-  label: string
+import {
+  KNOWN_SITES as BASE_KNOWN_SITES,
+  canonicalizeKnownSiteDomain,
+  type KnownSite as BaseKnownSite,
+} from '../shared/knownSites'
+
+export type KnownSite = BaseKnownSite & {
   icon: IconDefinition
-  aliases?: string[]
 }
 
-export const KNOWN_SITES: KnownSite[] = [
-  { domain: 'youtube.com', label: 'YouTube', icon: faYoutube, aliases: ['youtu.be'] },
-  { domain: 'facebook.com', label: 'Facebook', icon: faFacebook },
-  { domain: 'instagram.com', label: 'Instagram', icon: faInstagram },
-  { domain: 'x.com', label: 'X', icon: faXTwitter, aliases: ['twitter.com'] },
-  { domain: 'tiktok.com', label: 'TikTok', icon: faTiktok },
-  { domain: 'linkedin.com', label: 'LinkedIn', icon: faLinkedin },
-  { domain: 'reddit.com', label: 'Reddit', icon: faReddit },
-  { domain: 'snapchat.com', label: 'Snapchat', icon: faSnapchat },
-  { domain: 'pinterest.com', label: 'Pinterest', icon: faPinterest },
-  { domain: 'twitch.tv', label: 'Twitch', icon: faTwitch },
-  { domain: 'discord.com', label: 'Discord', icon: faDiscord, aliases: ['discord.gg'] },
-  { domain: 'whatsapp.com', label: 'WhatsApp', icon: faWhatsapp },
-  { domain: 'telegram.org', label: 'Telegram', icon: faTelegram, aliases: ['t.me'] },
-]
-
-function matchesKnownSite(domain: string, site: KnownSite): boolean {
-  return site.domain === domain || site.aliases?.includes(domain) === true
+const SITE_ICONS: Record<string, IconDefinition> = {
+  'youtube.com': faYoutube,
+  'facebook.com': faFacebook,
+  'instagram.com': faInstagram,
+  'x.com': faXTwitter,
+  'tiktok.com': faTiktok,
+  'linkedin.com': faLinkedin,
+  'reddit.com': faReddit,
+  'snapchat.com': faSnapchat,
+  'pinterest.com': faPinterest,
+  'twitch.tv': faTwitch,
+  'discord.com': faDiscord,
+  'whatsapp.com': faWhatsapp,
+  'telegram.org': faTelegram,
 }
+
+export const KNOWN_SITES: KnownSite[] = BASE_KNOWN_SITES.map((site) => ({
+  ...site,
+  icon: SITE_ICONS[site.domain] ?? faGlobe,
+}))
 
 export function getSiteIcon(domain: string): IconDefinition {
-  return KNOWN_SITES.find((site) => matchesKnownSite(domain, site))?.icon ?? faGlobe
+  return SITE_ICONS[canonicalizeKnownSiteDomain(domain)] ?? faGlobe
 }
