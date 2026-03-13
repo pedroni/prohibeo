@@ -73,7 +73,9 @@ function parseNamedSchedule(value: unknown, scheduleIndex: number): NamedSchedul
   return {
     id: value.id,
     name: value.name,
-    weekdays: [...new Set(weekdays)] as Weekday[],
+    weekdays: [...new Set(weekdays)].sort(
+      (left, right) => WEEKDAY_ORDER.indexOf(left) - WEEKDAY_ORDER.indexOf(right),
+    ) as Weekday[],
     startHour: value.startHour,
     endHour: value.endHour,
   }
@@ -124,7 +126,6 @@ function parseSiteRule(
   if (
     typeof value.id !== 'string' ||
     typeof value.domain !== 'string' ||
-    typeof value.enabled !== 'boolean' ||
     !isBlockingMode(value.blockingMode) ||
     !(
       typeof value.temporaryBlockUntil === 'string' ||
@@ -144,12 +145,11 @@ function parseSiteRule(
   return {
     id: value.id,
     domain: value.domain,
-    enabled: value.enabled,
     blockingMode: value.blockingMode,
     scheduleIds: parseScheduleIds(value.scheduleIds, index),
     temporaryBlockUntil: typeof value.temporaryBlockUntil === 'string' ? value.temporaryBlockUntil : null,
     presetToggles: parsePresetToggles(value.presetToggles, index),
-    customSelectors: value.customSelectors,
+    customSelectors: [...new Set(value.customSelectors.map((selector) => selector.trim()).filter(Boolean))],
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
   }
@@ -223,13 +223,11 @@ export function resolveSiteRules(siteRules: SiteRule[], schedules: NamedSchedule
 
 export function createSiteRule(domain: string): SiteRule {
   const timestamp = new Date().toISOString()
-  const sectionOnlyRule = usesSectionHidingOnly(domain)
 
   return {
     id: crypto.randomUUID(),
     domain,
-    enabled: !sectionOnlyRule,
-    blockingMode: sectionOnlyRule ? 'scheduled' : 'always',
+    blockingMode: 'always',
     scheduleIds: [],
     temporaryBlockUntil: null,
     presetToggles: createDefaultPresetToggles(domain),
@@ -248,14 +246,9 @@ export async function getExtensionData(): Promise<ExtensionData> {
     const schedules = parseSchedules(storedValue[SCHEDULES_STORAGE_KEY])
 
     return normalizeData(rules, schedules)
-  } catch {
-    const emptyData: ExtensionData = {
-      siteRules: [],
-      schedules: [],
-    }
-
-    await saveExtensionData(emptyData)
-    return emptyData
+  } catch (error) {
+    console.error('Prohibeo could not parse stored extension data.', error)
+    throw new Error('Stored Prohibeo data is malformed. Clear extension storage to recover.')
   }
 }
 

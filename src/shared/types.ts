@@ -46,7 +46,6 @@ export type PresetToggles = Partial<Record<PresetOptionKey, boolean>>
 export type SiteRule = {
   id: string
   domain: string
-  enabled: boolean
   blockingMode: BlockingMode
   scheduleIds: string[]
   temporaryBlockUntil: string | null

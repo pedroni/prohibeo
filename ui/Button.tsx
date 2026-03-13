@@ -11,6 +11,7 @@ type CommonButtonProps = {
   children: ReactNode
   size?: ButtonSize
   variant?: ButtonVariant
+  className?: string
 }
 
 type LinkButtonProps = CommonButtonProps &
@@ -28,6 +29,7 @@ type ButtonProps = LinkButtonProps | NativeButtonProps
 function getButtonClassName(
   variant: ButtonVariant,
   size: ButtonSize,
+  className?: string,
 ): string {
   const variantClassName =
     variant === 'primary'
@@ -44,19 +46,20 @@ function getButtonClassName(
           ? 'h-9 w-9'
           : 'px-3 py-2 text-sm'
 
-  return `inline-flex items-center justify-center gap-2 border font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${variantClassName} ${sizeClassName}`
+  return `inline-flex items-center justify-center gap-2 border font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${variantClassName} ${sizeClassName} ${className ?? ''}`.trim()
 }
 
 export function Button(props: ButtonProps) {
   if ('href' in props && props.href) {
     const {
       children,
+      className,
       href,
       size = 'md',
       variant = 'primary',
       ...linkProps
     } = props
-    const resolvedClassName = getButtonClassName(variant, size)
+    const resolvedClassName = getButtonClassName(variant, size, className)
 
     return (
       <a href={href} className={resolvedClassName} {...linkProps}>
@@ -68,12 +71,13 @@ export function Button(props: ButtonProps) {
   const nativeButtonProps = props as NativeButtonProps
   const {
     children,
+    className,
     size = 'md',
     type = 'button',
     variant = 'secondary',
     ...buttonProps
   } = nativeButtonProps
-  const resolvedClassName = getButtonClassName(variant, size)
+  const resolvedClassName = getButtonClassName(variant, size, className)
 
   return (
     <button type={type} className={resolvedClassName} {...buttonProps}>

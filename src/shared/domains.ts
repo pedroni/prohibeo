@@ -1,6 +1,5 @@
 import { getDomain } from 'tldts'
 
-import { isRuleActiveOnPage } from './presets'
 import { resolveSiteRules } from './storage'
 import type { NamedSchedule, ResolvedSiteRule, SiteRule } from './types'
 
@@ -50,6 +49,6 @@ export function findMatchingRule(
   hostname: string,
 ): ResolvedSiteRule | undefined {
   return resolveSiteRules(rules, schedules)
-    .filter((rule) => isRuleActiveOnPage(rule) && domainMatches(hostname, rule.domain))
+    .filter((rule) => domainMatches(hostname, rule.domain))
     .sort((left, right) => right.domain.length - left.domain.length)[0]
 }

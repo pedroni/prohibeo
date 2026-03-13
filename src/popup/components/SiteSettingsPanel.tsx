@@ -82,6 +82,16 @@ function isValidSelector(selector: string): boolean {
   }
 }
 
+function getInitialTemporaryMinutes(rule: SiteRule): string {
+  const remainingMs = getTemporaryBlockRemainingMs(rule)
+
+  if (remainingMs === null || remainingMs <= 0) {
+    return '60'
+  }
+
+  return String(Math.max(1, Math.ceil(remainingMs / 60000)))
+}
+
 type ScheduleFormProps = {
   values: ScheduleFormValues
   nameError: string | null
@@ -200,7 +210,7 @@ export function SiteSettingsPanel({
 }: SiteSettingsPanelProps) {
   const [selectorInput, setSelectorInput] = useState('')
   const [selectorError, setSelectorError] = useState<string | null>(null)
-  const [temporaryMinutes, setTemporaryMinutes] = useState('60')
+  const [temporaryMinutes, setTemporaryMinutes] = useState(() => getInitialTemporaryMinutes(rule))
   const [temporaryMinutesError, setTemporaryMinutesError] = useState<string | null>(null)
   const [scheduleFormState, setScheduleFormState] = useState<ScheduleFormState>({ mode: 'idle' })
   const [scheduleFormValues, setScheduleFormValues] = useState<ScheduleFormValues>(DEFAULT_FORM_VALUES)
@@ -304,29 +314,6 @@ export function SiteSettingsPanel({
     if (temporaryMinutesError) {
       setTemporaryMinutesError(null)
     }
-
-    if (rule.blockingMode !== 'temporary') {
-      return
-    }
-
-    const normalizedMinutes = nextValue.trim()
-
-    if (!/^\d+$/.test(normalizedMinutes)) {
-      return
-    }
-
-    const parsedMinutes = Number.parseInt(normalizedMinutes, 10)
-
-    if (parsedMinutes <= 0) {
-      return
-    }
-
-    const restartedAt = new Date()
-
-    updateRule({
-      ...rule,
-      temporaryBlockUntil: new Date(restartedAt.getTime() + parsedMinutes * 60 * 1000).toISOString(),
-    })
   }
 
   function handleClearTemporaryBlock(): void {
@@ -513,10 +500,10 @@ export function SiteSettingsPanel({
           <section className="space-y-3 border border-foreground/20 p-4">
             <div>
               <h3 className="text-lg font-bold">Temporary active</h3>
-              <p className="text-sm text-muted-foreground">
-                {temporaryBlockActive
+            <p className="text-sm text-muted-foreground">
+              {temporaryBlockActive
                   ? `${formatCountdownDuration(temporaryBlockRemainingMs)} left. Prohibeo clears the timer automatically when it ends.`
-                  : 'Set the timer in minutes. Changing the value restarts the countdown.'}
+                  : 'Set the timer in minutes, then start or restart the countdown.'}
               </p>
             </div>
 
@@ -537,9 +524,14 @@ export function SiteSettingsPanel({
             ) : null}
 
             <div>
-              <Button variant="secondary" onClick={handleClearTemporaryBlock}>
+              <div className="flex gap-2">
+                <Button onClick={handleStartTemporaryBlock}>
+                  {temporaryBlockActive ? 'Restart temporary' : 'Start temporary'}
+                </Button>
+                <Button variant="secondary" onClick={handleClearTemporaryBlock}>
                 Clear temporary
-              </Button>
+                </Button>
+              </div>
             </div>
           </section>
         ) : null}

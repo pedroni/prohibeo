@@ -1,6 +1,6 @@
 import { faCheck, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { Button } from './Button'
 
@@ -27,30 +27,30 @@ export function ConfirmDeleteButton({
   const resetTimeoutRef = useRef<number | null>(null)
   const armAnimationTimeoutRef = useRef<number | null>(null)
 
-  function clearResetTimeout(): void {
+  const clearResetTimeout = useCallback((): void => {
     if (resetTimeoutRef.current === null) {
       return
     }
 
     window.clearTimeout(resetTimeoutRef.current)
     resetTimeoutRef.current = null
-  }
+  }, [])
 
-  function clearArmAnimationTimeout(): void {
+  const clearArmAnimationTimeout = useCallback((): void => {
     if (armAnimationTimeoutRef.current === null) {
       return
     }
 
     window.clearTimeout(armAnimationTimeoutRef.current)
     armAnimationTimeoutRef.current = null
-  }
+  }, [])
 
-  function resetConfirmation(): void {
+  const resetConfirmation = useCallback((): void => {
     clearResetTimeout()
     clearArmAnimationTimeout()
     setIsConfirming(false)
     setIsAnimatingArm(false)
-  }
+  }, [clearArmAnimationTimeout, clearResetTimeout])
 
   function armConfirmation(): void {
     setIsConfirming(true)
@@ -87,7 +87,7 @@ export function ConfirmDeleteButton({
       clearResetTimeout()
       clearArmAnimationTimeout()
     },
-    [],
+    [clearArmAnimationTimeout, clearResetTimeout],
   )
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export function ConfirmDeleteButton({
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown)
     }
-  }, [isConfirming])
+  }, [isConfirming, resetConfirmation])
 
   return (
     <div ref={containerRef} className={isAnimatingArm ? 'animate-subtle-confirm-shake' : undefined}>

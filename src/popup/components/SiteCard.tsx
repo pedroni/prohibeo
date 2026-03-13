@@ -37,6 +37,10 @@ function Badge({ children, active = false }: { children: ReactNode; active?: boo
 }
 
 function getRuleLabel(rule: SiteRule, schedules: NamedSchedule[], now: Date): string {
+  if (usesSectionHidingOnly(rule.domain) && rule.blockingMode === 'always') {
+    return 'Sections hidden'
+  }
+
   if (rule.blockingMode === 'temporary') {
     const remainingMs = getTemporaryBlockRemainingMs(rule, now)
 
@@ -68,7 +72,6 @@ export function SiteCard({ now, rule, schedules, onEdit, onRemove }: SiteCardPro
     schedules: resolveSchedulesForRule(rule, schedules),
   }
   const blockingNow = isSiteRuleBlockingNow(resolvedRule, now)
-  const sectionOnlyRule = usesSectionHidingOnly(rule.domain)
 
   return (
     <article className="border border-foreground/20 p-4">
@@ -81,9 +84,7 @@ export function SiteCard({ now, rule, schedules, onEdit, onRemove }: SiteCardPro
             <div className="min-w-0">
               <h2 className="truncate text-lg font-bold">{rule.domain}</h2>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {sectionOnlyRule && rule.blockingMode === 'scheduled' && resolvedRule.schedules.length === 0
-                  ? 'Sections hidden'
-                  : getRuleLabel(rule, schedules, now)}
+                {getRuleLabel(rule, schedules, now)}
               </p>
             </div>
           </div>

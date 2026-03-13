@@ -1,5 +1,4 @@
-import { isSiteRuleBlockingNow } from './schedule'
-import type { PresetOptionDefinition, PresetOptionKey, ResolvedSiteRule, SiteRule } from './types'
+import type { PresetOptionDefinition, PresetOptionKey, SiteRule } from './types'
 
 import { YOUTUBE_PRESET_OPTIONS } from './presets/youtube'
 
@@ -45,8 +44,4 @@ export function getEnabledPresetSelectors(rule: SiteRule): string[] {
 
 export function hasSectionHiding(rule: SiteRule): boolean {
   return getEnabledPresetSelectors(rule).length > 0 || rule.customSelectors.length > 0
-}
-
-export function isRuleActiveOnPage(rule: ResolvedSiteRule): boolean {
-  return isSiteRuleBlockingNow(rule)
 }

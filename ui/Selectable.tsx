@@ -1,6 +1,6 @@
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 export type SelectableOption<TValue extends string> = {
   value: TValue
@@ -34,6 +34,7 @@ export function Selectable<TValue extends string>({
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const listId = useId()
 
   const query = value.trim().toLowerCase()
   const filteredOptions = options.filter((option) => {
@@ -126,6 +127,11 @@ export function Selectable<TValue extends string>({
       <div className={`flex border border-foreground/20 bg-background ${open ? 'bg-foreground/5' : ''}`}>
         <input
           ref={inputRef}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-controls={listId}
+          aria-expanded={open}
+          aria-activedescendant={open && activeIndex >= 0 ? `${listId}-option-${activeIndex}` : undefined}
           className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
           value={value}
           onChange={(event) => {
@@ -142,6 +148,9 @@ export function Selectable<TValue extends string>({
         <button
           type="button"
           aria-label={buttonLabel}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-controls={listId}
           className="border-l border-foreground/20 px-3 hover:bg-foreground/20"
           onClick={() => setOpen((previous) => !previous)}
         >
@@ -155,6 +164,8 @@ export function Selectable<TValue extends string>({
       {open ? (
         <div
           ref={listRef}
+          id={listId}
+          role="listbox"
           className="absolute left-0 right-0 top-full z-20 max-h-52 overflow-y-auto border border-t-0 border-foreground/20 bg-background"
         >
           {filteredOptions.length > 0 ? (
@@ -162,6 +173,9 @@ export function Selectable<TValue extends string>({
               <button
                 type="button"
                 key={option.value}
+                id={`${listId}-option-${index}`}
+                role="option"
+                aria-selected={index === activeIndex}
                 className={`flex w-full items-center gap-3 px-3 py-2 text-sm hover:bg-foreground/20 ${index === activeIndex ? 'bg-foreground/20' : ''}`}
                 onMouseDown={(event) => {
                   event.preventDefault()

@@ -2,7 +2,6 @@ import { findMatchingRule } from '../shared/domains'
 import {
   getEnabledPresetSelectors,
   hasSectionHiding,
-  isRuleActiveOnPage,
   usesSectionHidingOnly,
 } from '../shared/presets'
 import {
@@ -48,7 +47,7 @@ function ensureHideStyle(): HTMLStyleElement {
 }
 
 function applyHideStyle(rule: ResolvedSiteRule | undefined): void {
-  if (!rule || !isRuleActiveOnPage(rule) || !hasSectionHiding(rule)) {
+  if (!rule || !hasSectionHiding(rule)) {
     removeHideStyle()
     return
   }
@@ -237,14 +236,15 @@ function applyBlockOverlay(rule: ResolvedSiteRule, at = new Date()): void {
 
 function applyMatchingRule(siteRules: SiteRule[], schedules: ResolvedSiteRule['schedules'], at = new Date()): void {
   const matchingRule = findMatchingRule(siteRules, schedules, window.location.hostname)
+  const blockingNow = matchingRule ? isSiteRuleBlockingNow(matchingRule, at) : false
 
-  if (matchingRule && isSiteRuleBlockingNow(matchingRule, at) && !usesSectionHidingOnly(matchingRule.domain)) {
+  if (matchingRule && blockingNow && !usesSectionHidingOnly(matchingRule.domain)) {
     applyBlockOverlay(matchingRule, at)
     return
   }
 
   removeBlockOverlay()
-  applyHideStyle(matchingRule)
+  applyHideStyle(blockingNow ? matchingRule : undefined)
 }
 
 async function refreshRules(): Promise<void> {
@@ -263,6 +263,7 @@ async function refreshRules(): Promise<void> {
     applyMatchingRule(normalizedSiteRules, extensionData.schedules, currentTime)
   } catch (error) {
     console.error('Prohibeo failed to load rules.', error)
+    removeBlockOverlay()
     removeHideStyle()
   }
 }
