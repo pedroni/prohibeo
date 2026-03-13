@@ -7,11 +7,20 @@ import { defineConfig } from 'vite'
 
 import manifest from './src/manifest'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       '@ui': fileURLToPath(new URL('./ui', import.meta.url)),
     },
   },
   plugins: [react(), tailwindcss(), crx({ manifest })],
-})
+  build: {
+    sourcemap: mode === 'debug',
+    minify: mode === 'debug' ? false : undefined,
+  },
+  server: {
+    cors: {
+      origin: [/chrome-extension:\/\//],
+    },
+  },
+}))

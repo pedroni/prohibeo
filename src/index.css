@@ -59,3 +59,33 @@ select,
 textarea {
   font: inherit;
 }
+
+@keyframes subtle-confirm-shake {
+  0% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-1px);
+  }
+
+  40% {
+    transform: translateX(1px);
+  }
+
+  60% {
+    transform: translateX(-1px);
+  }
+
+  80% {
+    transform: translateX(1px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-subtle-confirm-shake {
+  animation: subtle-confirm-shake 180ms ease-out;
+}

@@ -1,20 +1,23 @@
-import { faGear, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faGear } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { ReactNode } from 'react'
 
 import { Button } from '@ui/Button'
+import { ConfirmDeleteButton } from '@ui/ConfirmDeleteButton'
 import { getEnabledPresetLabels, usesSectionHidingOnly } from '../../shared/presets'
 import {
   formatCountdownDuration,
   getTemporaryBlockRemainingMs,
   isSiteRuleBlockingNow,
 } from '../../shared/schedule'
-import type { SiteRule } from '../../shared/types'
+import { resolveSchedulesForRule } from '../../shared/storage'
+import type { NamedSchedule, SiteRule } from '../../shared/types'
 import { getSiteIcon } from '../siteMetadata'
 
 type SiteCardProps = {
   now: Date
   rule: SiteRule
+  schedules: NamedSchedule[]
   onEdit: () => void
   onRemove: () => void
 }
@@ -33,7 +36,7 @@ function Badge({ children, active = false }: { children: ReactNode; active?: boo
   )
 }
 
-function getRuleLabel(rule: SiteRule, now: Date): string {
+function getRuleLabel(rule: SiteRule, schedules: NamedSchedule[], now: Date): string {
   if (rule.blockingMode === 'temporary') {
     const remainingMs = getTemporaryBlockRemainingMs(rule, now)
 
@@ -46,19 +49,25 @@ function getRuleLabel(rule: SiteRule, now: Date): string {
     return 'Always blocked'
   }
 
-  if (rule.schedules.length === 0) {
+  const resolvedSchedules = resolveSchedulesForRule(rule, schedules)
+
+  if (resolvedSchedules.length === 0) {
     return 'Scheduled - No schedules'
   }
 
-  return rule.schedules.length === 1
-    ? `Scheduled - ${rule.schedules[0].name}`
-    : `Scheduled - ${rule.schedules.length} schedules`
+  return resolvedSchedules.length === 1
+    ? `Scheduled - ${resolvedSchedules[0].name}`
+    : `Scheduled - ${resolvedSchedules.length} schedules`
 }
 
-export function SiteCard({ now, rule, onEdit, onRemove }: SiteCardProps) {
+export function SiteCard({ now, rule, schedules, onEdit, onRemove }: SiteCardProps) {
   const enabledPresetLabels = getEnabledPresetLabels(rule)
   const selectorCount = rule.customSelectors.length
-  const blockingNow = isSiteRuleBlockingNow(rule, now)
+  const resolvedRule = {
+    ...rule,
+    schedules: resolveSchedulesForRule(rule, schedules),
+  }
+  const blockingNow = isSiteRuleBlockingNow(resolvedRule, now)
   const sectionOnlyRule = usesSectionHidingOnly(rule.domain)
 
   return (
@@ -66,42 +75,34 @@ export function SiteCard({ now, rule, onEdit, onRemove }: SiteCardProps) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-3">
-            <span className="inline-flex shrink-0 h-9 w-9!  items-center justify-center border border-foreground/20">
+            <span className="inline-flex h-9 w-9! shrink-0 items-center justify-center border border-foreground/20">
               <FontAwesomeIcon icon={getSiteIcon(rule.domain)} />
             </span>
             <div className="min-w-0">
               <h2 className="truncate text-lg font-bold">{rule.domain}</h2>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {sectionOnlyRule && rule.blockingMode === 'scheduled' && rule.schedules.length === 0
+                {sectionOnlyRule && rule.blockingMode === 'scheduled' && resolvedRule.schedules.length === 0
                   ? 'Sections hidden'
-                  : getRuleLabel(rule, now)}
+                  : getRuleLabel(rule, schedules, now)}
               </p>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            size="icon"
-            aria-label={`Edit ${rule.domain}`}
-            onClick={onEdit}
-          >
+          <Button size="icon" aria-label={`Edit ${rule.domain}`} onClick={onEdit}>
             <FontAwesomeIcon icon={faGear} />
           </Button>
-          <Button
-            size="icon"
-            aria-label={`Remove ${rule.domain}`}
-            onClick={onRemove}
-          >
-            <FontAwesomeIcon icon={faXmark} />
-          </Button>
+          <ConfirmDeleteButton
+            ariaLabel={`Remove ${rule.domain}`}
+            confirmAriaLabel={`Confirm remove ${rule.domain}`}
+            onConfirm={onRemove}
+          />
         </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <Badge active={blockingNow}>
-          {blockingNow ? 'Blocking now' : 'Not blocking now'}
-        </Badge>
+        <Badge active={blockingNow}>{blockingNow ? 'Blocking now' : 'Not blocking now'}</Badge>
 
         {enabledPresetLabels.map((label) => (
           <Badge key={label}>{label}</Badge>

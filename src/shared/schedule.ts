@@ -1,4 +1,6 @@
-import type { NamedSchedule, SiteRule, StrictSchedule, Weekday } from './types'
+import type { NamedSchedule, ResolvedSiteRule, SiteRule, StrictSchedule, Weekday } from './types'
+
+type TemporaryRule = Pick<SiteRule, 'temporaryBlockUntil'>
 
 const JAVASCRIPT_DAY_TO_WEEKDAY: readonly Weekday[] = [
   'sun',
@@ -63,7 +65,7 @@ export function isScheduleActive(schedule: StrictSchedule, at = new Date()): boo
   )
 }
 
-export function isSiteRuleBlockingNow(rule: SiteRule, at = new Date()): boolean {
+export function isSiteRuleBlockingNow(rule: ResolvedSiteRule, at = new Date()): boolean {
   if (rule.blockingMode === 'always') {
     return true
   }
@@ -75,7 +77,7 @@ export function isSiteRuleBlockingNow(rule: SiteRule, at = new Date()): boolean 
   return rule.schedules.some((schedule) => isScheduleActive(schedule, at))
 }
 
-export function getActiveSchedules(rule: SiteRule, at = new Date()): NamedSchedule[] {
+export function getActiveSchedules(rule: ResolvedSiteRule, at = new Date()): NamedSchedule[] {
   if (rule.blockingMode !== 'scheduled') {
     return []
   }
@@ -90,7 +92,7 @@ export function formatHourLabel(hour: number): string {
   return `${normalized}:00 ${suffix}`
 }
 
-export function getTemporaryBlockRemainingMs(rule: SiteRule, at = new Date()): number | null {
+export function getTemporaryBlockRemainingMs(rule: TemporaryRule, at = new Date()): number | null {
   if (typeof rule.temporaryBlockUntil !== 'string') {
     return null
   }
@@ -124,7 +126,7 @@ export function clearExpiredTemporaryBlocks(siteRules: SiteRule[], at = new Date
   return siteRules.map((rule) => clearExpiredTemporaryBlock(rule, at))
 }
 
-export function isTemporaryBlockActive(rule: SiteRule, at = new Date()): boolean {
+export function isTemporaryBlockActive(rule: TemporaryRule, at = new Date()): boolean {
   const remainingMs = getTemporaryBlockRemainingMs(rule, at)
 
   return Boolean(remainingMs !== null && remainingMs > 0)

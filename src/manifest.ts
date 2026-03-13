@@ -6,7 +6,7 @@ export default defineManifest({
   version: '0.1.0',
   description: 'Block websites and hide distracting sections with schedule-based rules.',
   permissions: ['storage'],
-  host_permissions: ['<all_urls>'],
+  host_permissions: ['http://*/*', 'https://*/*'],
   action: {
     default_title: 'Prohibeo',
     default_popup: 'index.html',
@@ -25,7 +25,7 @@ export default defineManifest({
   },
   content_scripts: [
     {
-      matches: ['<all_urls>'],
+      matches: ['http://*/*', 'https://*/*'],
       js: ['src/content/index.ts'],
       run_at: 'document_start',
     },

@@ -36,6 +36,11 @@ export type NamedSchedule = StrictSchedule & {
   name: string
 }
 
+export type ExtensionData = {
+  siteRules: SiteRule[]
+  schedules: NamedSchedule[]
+}
+
 export type PresetToggles = Partial<Record<PresetOptionKey, boolean>>
 
 export type SiteRule = {
@@ -43,12 +48,16 @@ export type SiteRule = {
   domain: string
   enabled: boolean
   blockingMode: BlockingMode
-  schedules: NamedSchedule[]
+  scheduleIds: string[]
   temporaryBlockUntil: string | null
   presetToggles: PresetToggles
   customSelectors: string[]
   createdAt: string
   updatedAt: string
+}
+
+export type ResolvedSiteRule = SiteRule & {
+  schedules: NamedSchedule[]
 }
 
 export type PresetOptionDefinition<Key extends string = string> = {

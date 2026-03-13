@@ -1,7 +1,8 @@
 import { getDomain } from 'tldts'
 
 import { isRuleActiveOnPage } from './presets'
-import type { SiteRule } from './types'
+import { resolveSiteRules } from './storage'
+import type { NamedSchedule, ResolvedSiteRule, SiteRule } from './types'
 
 function parseUrlCandidate(input: string): URL {
   const candidate = input.includes('://') ? input : `https://${input}`
@@ -43,8 +44,12 @@ export function domainMatches(hostname: string, domain: string): boolean {
   )
 }
 
-export function findMatchingRule(rules: SiteRule[], hostname: string): SiteRule | undefined {
-  return [...rules]
+export function findMatchingRule(
+  rules: SiteRule[],
+  schedules: NamedSchedule[],
+  hostname: string,
+): ResolvedSiteRule | undefined {
+  return resolveSiteRules(rules, schedules)
     .filter((rule) => isRuleActiveOnPage(rule) && domainMatches(hostname, rule.domain))
     .sort((left, right) => right.domain.length - left.domain.length)[0]
 }

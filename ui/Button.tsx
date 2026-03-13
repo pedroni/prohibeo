@@ -4,7 +4,7 @@ import type {
   ReactNode,
 } from 'react'
 
-type ButtonVariant = 'primary' | 'secondary'
+type ButtonVariant = 'primary' | 'secondary' | 'danger'
 type ButtonSize = 'md' | 'lg' | 'xs' | 'icon'
 
 type CommonButtonProps = {
@@ -32,7 +32,9 @@ function getButtonClassName(
   const variantClassName =
     variant === 'primary'
       ? 'border-foreground/20 bg-foreground! text-background! hover:bg-foreground/80!'
-      : 'border-foreground/20 bg-background! text-foreground! hover:bg-foreground/10!'
+      : variant === 'danger'
+        ? 'border-red-500/40 bg-red-500/10! text-red-700! hover:bg-red-500/20! dark:text-red-300!'
+        : 'border-foreground/20 bg-background! text-foreground! hover:bg-foreground/10!'
   const sizeClassName =
     size === 'lg'
       ? 'px-4 py-3 text-sm'

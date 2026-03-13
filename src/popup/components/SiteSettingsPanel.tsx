@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react'
-import { faArrowLeft, faPencil, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
+import {
+  faArrowLeft,
+  faPencil,
+  faPlus,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import {
@@ -10,11 +14,12 @@ import {
 import {
   DEFAULT_SCHEDULE,
   formatCountdownDuration,
-  WEEKDAY_LABELS,
   formatHourLabel,
   formatScheduleSummary,
   getTemporaryBlockRemainingMs,
+  WEEKDAY_LABELS,
 } from '../../shared/schedule'
+import { resolveSchedulesForRule } from '../../shared/storage'
 import {
   WEEKDAY_ORDER,
   type BlockingMode,
@@ -24,20 +29,26 @@ import {
 } from '../../shared/types'
 
 import { Button } from '@ui/Button'
+import { ConfirmDeleteButton } from '@ui/ConfirmDeleteButton'
 import { Select } from '@ui/Select'
 import { TextInput } from '@ui/TextInput'
+import { SearchableSelect, type SearchableSelectOption } from './SearchableSelect'
 import { Toggle } from './Toggle'
 
 type SiteSettingsPanelProps = {
   now: Date
   rule: SiteRule
+  schedules: NamedSchedule[]
+  siteRules: SiteRule[]
   onClose: () => void
   onChange: (nextRule: SiteRule) => void
+  onAttachSchedule: (siteRuleId: string, scheduleId: string) => void
+  onCreateSchedule: (nextSchedule: NamedSchedule, siteRuleId: string) => void
+  onDetachSchedule: (siteRuleId: string, scheduleId: string) => void
+  onSchedulesChange: (nextSchedules: NamedSchedule[]) => void
 }
 
-const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => hour)
-
-interface ScheduleFormValues {
+type ScheduleFormValues = {
   name: string
   weekdays: Weekday[]
   startHour: number
@@ -49,11 +60,17 @@ type ScheduleFormState =
   | { mode: 'adding' }
   | { mode: 'editing'; scheduleId: string }
 
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => hour)
+
 const DEFAULT_FORM_VALUES: ScheduleFormValues = {
   name: '',
   weekdays: [...DEFAULT_SCHEDULE.weekdays],
   startHour: DEFAULT_SCHEDULE.startHour,
   endHour: DEFAULT_SCHEDULE.endHour,
+}
+
+function normalizeScheduleName(name: string): string {
+  return name.trim().toLowerCase()
 }
 
 function isValidSelector(selector: string): boolean {
@@ -65,37 +82,50 @@ function isValidSelector(selector: string): boolean {
   }
 }
 
-interface ScheduleFormProps {
+type ScheduleFormProps = {
   values: ScheduleFormValues
   nameError: string | null
+  warningMessage?: string | null
   onChange: (next: ScheduleFormValues) => void
   onSave: () => void
   onCancel: () => void
 }
 
-function ScheduleForm({ values, nameError, onChange, onSave, onCancel }: ScheduleFormProps) {
+function ScheduleForm({
+  values,
+  nameError,
+  warningMessage,
+  onChange,
+  onSave,
+  onCancel,
+}: ScheduleFormProps) {
   function toggleWeekday(weekday: Weekday): void {
     const next = values.weekdays.includes(weekday)
-      ? values.weekdays.filter((w) => w !== weekday)
+      ? values.weekdays.filter((value) => value !== weekday)
       : [...values.weekdays, weekday].sort(
-          (a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b),
+          (left, right) => WEEKDAY_ORDER.indexOf(left) - WEEKDAY_ORDER.indexOf(right),
         )
+
     onChange({ ...values, weekdays: next })
   }
 
   return (
     <div className="space-y-3 border-t border-foreground/20 pt-3">
+      {warningMessage ? (
+        <p className="border border-yellow-500 bg-yellow-500/10 px-3 py-2 text-sm font-semibold text-yellow-700 dark:text-yellow-300">
+          {warningMessage}
+        </p>
+      ) : null}
+
       <div>
         <p className="mb-1 text-sm font-bold">Schedule name</p>
         <TextInput
           value={values.name}
-          onChange={(e) => onChange({ ...values, name: e.target.value })}
+          onChange={(event) => onChange({ ...values, name: event.target.value })}
           placeholder="e.g. Deep Focus"
           autoComplete="off"
         />
-        {nameError ? (
-          <p className="mt-1 text-xs font-semibold text-foreground">{nameError}</p>
-        ) : null}
+        {nameError ? <p className="mt-1 text-xs font-semibold text-foreground">{nameError}</p> : null}
       </div>
 
       <div>
@@ -119,7 +149,7 @@ function ScheduleForm({ values, nameError, onChange, onSave, onCancel }: Schedul
           <span>Start hour</span>
           <Select
             value={values.startHour}
-            onChange={(e) => onChange({ ...values, startHour: Number(e.target.value) })}
+            onChange={(event) => onChange({ ...values, startHour: Number(event.target.value) })}
           >
             {HOUR_OPTIONS.map((hour) => (
               <option key={hour} value={hour}>
@@ -133,7 +163,7 @@ function ScheduleForm({ values, nameError, onChange, onSave, onCancel }: Schedul
           <span>End hour</span>
           <Select
             value={values.endHour}
-            onChange={(e) => onChange({ ...values, endHour: Number(e.target.value) })}
+            onChange={(event) => onChange({ ...values, endHour: Number(event.target.value) })}
           >
             {HOUR_OPTIONS.map((hour) => (
               <option key={hour} value={hour}>
@@ -159,8 +189,14 @@ function ScheduleForm({ values, nameError, onChange, onSave, onCancel }: Schedul
 export function SiteSettingsPanel({
   now,
   rule,
+  schedules,
+  siteRules,
   onClose,
   onChange,
+  onAttachSchedule,
+  onCreateSchedule,
+  onDetachSchedule,
+  onSchedulesChange,
 }: SiteSettingsPanelProps) {
   const [selectorInput, setSelectorInput] = useState('')
   const [selectorError, setSelectorError] = useState<string | null>(null)
@@ -169,18 +205,56 @@ export function SiteSettingsPanel({
   const [scheduleFormState, setScheduleFormState] = useState<ScheduleFormState>({ mode: 'idle' })
   const [scheduleFormValues, setScheduleFormValues] = useState<ScheduleFormValues>(DEFAULT_FORM_VALUES)
   const [scheduleNameError, setScheduleNameError] = useState<string | null>(null)
+  const [schedulePickerValue, setSchedulePickerValue] = useState('')
 
   const presetLabel = getPresetDisplayName(rule.domain)
   const presetOptions = useMemo(() => getPresetOptionsForDomain(rule.domain), [rule.domain])
   const sectionOnlyRule = usesSectionHidingOnly(rule.domain)
   const temporaryBlockRemainingMs = getTemporaryBlockRemainingMs(rule, now)
   const temporaryBlockActive = temporaryBlockRemainingMs !== null && temporaryBlockRemainingMs > 0
+  const assignedSchedules = useMemo(() => resolveSchedulesForRule(rule, schedules), [rule, schedules])
+  const unassignedSchedules = useMemo(
+    () => schedules.filter((schedule) => !rule.scheduleIds.includes(schedule.id)),
+    [rule.scheduleIds, schedules],
+  )
+  const scheduleOptions: SearchableSelectOption<string>[] = useMemo(
+    () =>
+      unassignedSchedules.map((schedule) => ({
+        value: schedule.id,
+        searchText: `${schedule.name} ${formatScheduleSummary(schedule)}`,
+        label: schedule.name,
+        meta: formatScheduleSummary(schedule),
+      })),
+    [unassignedSchedules],
+  )
+  const editingSchedule =
+    scheduleFormState.mode === 'editing'
+      ? schedules.find((schedule) => schedule.id === scheduleFormState.scheduleId) ?? null
+      : null
 
   function updateRule(nextRule: SiteRule): void {
     onChange({
       ...nextRule,
       updatedAt: new Date().toISOString(),
     })
+  }
+
+  function getScheduleUsageCount(scheduleId: string): number {
+    return siteRules.filter((siteRule) => siteRule.scheduleIds.includes(scheduleId)).length
+  }
+
+  function getEditingWarningMessage(): string | null {
+    if (!editingSchedule) {
+      return null
+    }
+
+    const usageCount = getScheduleUsageCount(editingSchedule.id)
+
+    if (usageCount <= 1) {
+      return null
+    }
+
+    return `Editing this schedule will affect all sites using ${editingSchedule.name}.`
   }
 
   function getTemporaryDurationMs(): number | null {
@@ -272,6 +346,19 @@ export function SiteSettingsPanel({
     })
   }
 
+  function handleAttachSchedule(scheduleId: string): void {
+    if (rule.scheduleIds.includes(scheduleId)) {
+      return
+    }
+
+    onAttachSchedule(rule.id, scheduleId)
+    setSchedulePickerValue('')
+  }
+
+  function handleRemoveSchedule(scheduleId: string): void {
+    onDetachSchedule(rule.id, scheduleId)
+  }
+
   function handleSaveSchedule(): void {
     const name = scheduleFormValues.name.trim()
 
@@ -280,28 +367,43 @@ export function SiteSettingsPanel({
       return
     }
 
+    const duplicateSchedule = schedules.find((schedule) => {
+      if (scheduleFormState.mode === 'editing' && schedule.id === scheduleFormState.scheduleId) {
+        return false
+      }
+
+      return normalizeScheduleName(schedule.name) === normalizeScheduleName(name)
+    })
+
+    if (duplicateSchedule) {
+      setScheduleNameError('A schedule with this name already exists.')
+      return
+    }
+
     if (scheduleFormState.mode === 'editing') {
-      const { scheduleId } = scheduleFormState
-      updateRule({
-        ...rule,
-        schedules: rule.schedules.map((s) =>
-          s.id === scheduleId
-            ? { ...s, name, weekdays: scheduleFormValues.weekdays, startHour: scheduleFormValues.startHour, endHour: scheduleFormValues.endHour }
-            : s
+      onSchedulesChange(
+        schedules.map((schedule) =>
+          schedule.id === scheduleFormState.scheduleId
+            ? {
+                ...schedule,
+                name,
+                weekdays: scheduleFormValues.weekdays,
+                startHour: scheduleFormValues.startHour,
+                endHour: scheduleFormValues.endHour,
+              }
+            : schedule,
         ),
-      })
+      )
     } else {
-      const schedule: NamedSchedule = {
+      const nextSchedule: NamedSchedule = {
         id: crypto.randomUUID(),
         name,
         weekdays: scheduleFormValues.weekdays,
         startHour: scheduleFormValues.startHour,
         endHour: scheduleFormValues.endHour,
       }
-      updateRule({
-        ...rule,
-        schedules: [...rule.schedules, schedule],
-      })
+
+      onCreateSchedule(nextSchedule, rule.id)
     }
 
     setScheduleFormState({ mode: 'idle' })
@@ -324,13 +426,6 @@ export function SiteSettingsPanel({
       endHour: schedule.endHour,
     })
     setScheduleNameError(null)
-  }
-
-  function handleRemoveSchedule(id: string): void {
-    updateRule({
-      ...rule,
-      schedules: rule.schedules.filter((s) => s.id !== id),
-    })
   }
 
   function handleAddSelector(): void {
@@ -368,11 +463,11 @@ export function SiteSettingsPanel({
 
   return (
     <section className="absolute inset-0 z-10 flex flex-col bg-background pb-4 text-foreground">
-      <header className="border-b border-foreground/20 px-4 py-4">
+      <header className="border-b border-foreground/20 gap-4 flex items-center px-4 py-4">
         <button
           type="button"
           onClick={onClose}
-          className="mb-3 inline-flex items-center gap-2 text-sm font-semibold"
+          className="inline-flex items-center gap-2 text-sm font-semibold"
         >
           <FontAwesomeIcon icon={faArrowLeft} />
           Back
@@ -382,8 +477,6 @@ export function SiteSettingsPanel({
       </header>
 
       <div className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
-
-        {/* Blocking mode */}
         <section className="space-y-3 border border-foreground/20 p-4">
           <div>
             <h3 className="text-lg font-bold">Blocking</h3>
@@ -414,7 +507,6 @@ export function SiteSettingsPanel({
               Temporary
             </Button>
           </div>
-
         </section>
 
         {rule.blockingMode === 'temporary' ? (
@@ -452,87 +544,86 @@ export function SiteSettingsPanel({
           </section>
         ) : null}
 
-        {/* Schedules — separate section, only visible in scheduled mode */}
         {rule.blockingMode === 'scheduled' ? (
           <section className="space-y-3 border border-foreground/20 p-4">
             <div>
               <h3 className="text-lg font-bold">Schedules</h3>
               <p className="text-sm text-muted-foreground">
-                Block this site during specific times. Each schedule can have its own name, days, and hours.
+                Add schedules to define when this site is blocked.
               </p>
             </div>
 
-            {rule.schedules.length === 0 && scheduleFormState.mode === 'idle' ? (
+            {assignedSchedules.length === 0 && scheduleFormState.mode === 'idle' ? (
               <p className="text-sm text-muted-foreground">
-                No schedules yet. Add one to define when this site is blocked.
+                No schedules yet. Pick one below or create a new one.
               </p>
             ) : null}
 
-            {/* Existing schedule rows */}
-            {rule.schedules.map((schedule) =>
-              scheduleFormState.mode === 'editing' && scheduleFormState.scheduleId === schedule.id ? (
-                <ScheduleForm
-                  key={schedule.id}
-                  values={scheduleFormValues}
-                  nameError={scheduleNameError}
-                  onChange={(next) => {
-                    setScheduleFormValues(next)
-                    if (scheduleNameError) setScheduleNameError(null)
-                  }}
-                  onSave={handleSaveSchedule}
-                  onCancel={handleCancelSchedule}
-                />
-              ) : (
-                <div
-                  key={schedule.id}
-                  className="flex items-center justify-between gap-3 border-t border-foreground/20 py-3"
-                >
-                  <div className="min-w-0">
-                    <p className="font-bold">{schedule.name}</p>
-                    <p className="text-sm text-muted-foreground">{formatScheduleSummary(schedule)}</p>
-                  </div>
-                  <div className="flex shrink-0 gap-1">
-                    <Button
-                      size="icon"
-                      aria-label={`Edit ${schedule.name}`}
-                      onClick={() => handleEditSchedule(schedule)}
-                    >
-                      <FontAwesomeIcon icon={faPencil} />
-                    </Button>
-                    <Button
-                      size="icon"
-                      aria-label={`Remove ${schedule.name}`}
-                      onClick={() => handleRemoveSchedule(schedule.id)}
-                    >
-                      <FontAwesomeIcon icon={faTrashCan} />
-                    </Button>
-                  </div>
+            {assignedSchedules.map((schedule) => (
+              <div
+                key={schedule.id}
+                className="flex items-center justify-between gap-3 border-t border-foreground/20 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="font-bold">{schedule.name}</p>
+                  <p className="text-sm text-muted-foreground">{formatScheduleSummary(schedule)}</p>
                 </div>
-              )
-            )}
+                <div className="flex shrink-0 gap-1">
+                  <Button
+                    size="icon"
+                    aria-label={`Edit ${schedule.name}`}
+                    onClick={() => handleEditSchedule(schedule)}
+                  >
+                    <FontAwesomeIcon icon={faPencil} />
+                  </Button>
+                  <ConfirmDeleteButton
+                    ariaLabel={`Detach ${schedule.name}`}
+                    confirmAriaLabel={`Confirm detach ${schedule.name}`}
+                    onConfirm={() => handleRemoveSchedule(schedule.id)}
+                  />
+                </div>
+              </div>
+            ))}
 
-            {/* Add schedule form */}
-            {scheduleFormState.mode === 'adding' ? (
+            {scheduleOptions.length > 0 ? (
+              <div className="space-y-2 border-t border-foreground/20 pt-3">
+                <p className="text-sm font-bold">Add existing schedule</p>
+                <SearchableSelect
+                  value={schedulePickerValue}
+                  onChange={setSchedulePickerValue}
+                  onSelect={handleAttachSchedule}
+                  options={scheduleOptions}
+                  placeholder="Search schedules"
+                  buttonLabel="Show schedules"
+                  emptyMessage="No schedules available."
+                />
+              </div>
+            ) : null}
+
+            {scheduleFormState.mode !== 'idle' ? (
               <ScheduleForm
                 values={scheduleFormValues}
                 nameError={scheduleNameError}
-                onChange={(next) => {
-                  setScheduleFormValues(next)
-                  if (scheduleNameError) setScheduleNameError(null)
+                warningMessage={getEditingWarningMessage()}
+                onChange={(nextValues) => {
+                  setScheduleFormValues(nextValues)
+
+                  if (scheduleNameError) {
+                    setScheduleNameError(null)
+                  }
                 }}
                 onSave={handleSaveSchedule}
                 onCancel={handleCancelSchedule}
               />
-            ) : scheduleFormState.mode === 'idle' ? (
+            ) : (
               <Button onClick={() => setScheduleFormState({ mode: 'adding' })}>
                 <FontAwesomeIcon icon={faPlus} />
                 Add schedule
               </Button>
-            ) : null}
+            )}
           </section>
         ) : null}
 
-        {/* YouTube preset toggles */}
         {presetOptions.length > 0 ? (
           <section className="space-y-4 border border-foreground/20 p-4">
             <div>
@@ -566,7 +657,6 @@ export function SiteSettingsPanel({
           </section>
         ) : null}
 
-        {/* Custom CSS selectors */}
         <section className="space-y-4 border border-foreground/20 p-4">
           <div>
             <h3 className="text-lg font-bold">Custom selectors</h3>
@@ -580,6 +670,7 @@ export function SiteSettingsPanel({
               value={selectorInput}
               onChange={(event) => {
                 setSelectorInput(event.target.value)
+
                 if (selectorError) {
                   setSelectorError(null)
                 }
@@ -606,13 +697,11 @@ export function SiteSettingsPanel({
                   className="flex items-center justify-between gap-3 border border-foreground/20 px-3 py-2"
                 >
                   <code className="min-w-0 flex-1 truncate text-sm">{selector}</code>
-                  <Button
-                    size="icon"
-                    aria-label={`Remove ${selector}`}
-                    onClick={() => handleRemoveSelector(selector)}
-                  >
-                    <FontAwesomeIcon icon={faTrashCan} />
-                  </Button>
+                  <ConfirmDeleteButton
+                    ariaLabel={`Remove ${selector}`}
+                    confirmAriaLabel={`Confirm remove ${selector}`}
+                    onConfirm={() => handleRemoveSelector(selector)}
+                  />
                 </div>
               ))}
             </div>

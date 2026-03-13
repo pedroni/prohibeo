@@ -4,14 +4,17 @@ import {
   WEEKDAY_ORDER,
   YOUTUBE_PRESET_KEYS,
   type BlockingMode,
+  type ExtensionData,
   type NamedSchedule,
   type PresetOptionKey,
   type PresetToggles,
+  type ResolvedSiteRule,
   type SiteRule,
   type Weekday,
 } from './types'
 
 const SITE_RULES_STORAGE_KEY = 'siteRules'
+const SCHEDULES_STORAGE_KEY = 'schedules'
 
 function ensureStorageAvailability(): void {
   if (typeof chrome === 'undefined' || !chrome.storage?.local) {
@@ -40,20 +43,20 @@ function isPresetOptionKey(value: unknown): value is PresetOptionKey {
   )
 }
 
-function parseNamedSchedule(value: unknown, ruleIndex: number): NamedSchedule {
+function parseNamedSchedule(value: unknown, scheduleIndex: number): NamedSchedule {
   if (
     !isRecord(value) ||
     typeof value.id !== 'string' ||
     typeof value.name !== 'string' ||
     !Array.isArray(value.weekdays)
   ) {
-    throw new Error(`Stored named schedule for site rule ${ruleIndex + 1} is malformed.`)
+    throw new Error(`Stored schedule ${scheduleIndex + 1} is malformed.`)
   }
 
   const weekdays = value.weekdays
 
   if (!weekdays.every(isWeekday)) {
-    throw new Error(`Stored weekdays in named schedule for site rule ${ruleIndex + 1} are malformed.`)
+    throw new Error(`Stored weekdays in schedule ${scheduleIndex + 1} are malformed.`)
   }
 
   if (
@@ -64,7 +67,7 @@ function parseNamedSchedule(value: unknown, ruleIndex: number): NamedSchedule {
     value.endHour < 0 ||
     value.endHour > 23
   ) {
-    throw new Error(`Stored schedule hours in named schedule for site rule ${ruleIndex + 1} are malformed.`)
+    throw new Error(`Stored schedule hours in schedule ${scheduleIndex + 1} are malformed.`)
   }
 
   return {
@@ -98,7 +101,22 @@ function parsePresetToggles(value: unknown, index: number): PresetToggles {
   return toggles
 }
 
-function parseSiteRule(value: unknown, index: number): SiteRule {
+function parseScheduleIds(value: unknown, index: number): string[] {
+  if (value === undefined) {
+    return []
+  }
+
+  if (!Array.isArray(value) || !value.every((scheduleId) => typeof scheduleId === 'string')) {
+    throw new Error(`Stored schedule references for site rule ${index + 1} are malformed.`)
+  }
+
+  return [...new Set(value)]
+}
+
+function parseSiteRule(
+  value: unknown,
+  index: number,
+): SiteRule {
   if (!isRecord(value)) {
     throw new Error(`Stored site rule ${index + 1} is malformed.`)
   }
@@ -108,7 +126,13 @@ function parseSiteRule(value: unknown, index: number): SiteRule {
     typeof value.domain !== 'string' ||
     typeof value.enabled !== 'boolean' ||
     !isBlockingMode(value.blockingMode) ||
-    !(typeof value.temporaryBlockUntil === 'string' || value.temporaryBlockUntil === null || value.temporaryBlockUntil === undefined) ||
+    !(
+      typeof value.temporaryBlockUntil === 'string' ||
+      value.temporaryBlockUntil === null ||
+      value.temporaryBlockUntil === undefined
+    ) ||
+    !Array.isArray(value.scheduleIds) ||
+    !value.scheduleIds.every((scheduleId) => typeof scheduleId === 'string') ||
     !Array.isArray(value.customSelectors) ||
     !value.customSelectors.every((selector) => typeof selector === 'string') ||
     typeof value.createdAt !== 'string' ||
@@ -117,17 +141,12 @@ function parseSiteRule(value: unknown, index: number): SiteRule {
     throw new Error(`Stored site rule ${index + 1} is malformed.`)
   }
 
-  // Parse schedules array, defaulting to empty if absent or not an array.
-  const schedules: NamedSchedule[] = Array.isArray(value.schedules)
-    ? value.schedules.map((s) => parseNamedSchedule(s, index))
-    : []
-
   return {
     id: value.id,
     domain: value.domain,
     enabled: value.enabled,
     blockingMode: value.blockingMode,
-    schedules,
+    scheduleIds: parseScheduleIds(value.scheduleIds, index),
     temporaryBlockUntil: typeof value.temporaryBlockUntil === 'string' ? value.temporaryBlockUntil : null,
     presetToggles: parsePresetToggles(value.presetToggles, index),
     customSelectors: value.customSelectors,
@@ -145,7 +164,19 @@ function parseSiteRules(value: unknown): SiteRule[] {
     throw new Error('Stored site rules are malformed.')
   }
 
-  return value.map(parseSiteRule)
+  return value.map((item, index) => parseSiteRule(item, index))
+}
+
+function parseSchedules(value: unknown): NamedSchedule[] {
+  if (value === undefined) {
+    return []
+  }
+
+  if (!Array.isArray(value)) {
+    throw new Error('Stored schedules are malformed.')
+  }
+
+  return value.map((schedule, index) => parseNamedSchedule(schedule, index))
 }
 
 function createDefaultPresetToggles(domain: string): PresetToggles {
@@ -153,6 +184,41 @@ function createDefaultPresetToggles(domain: string): PresetToggles {
     toggles[option.key] = usesSectionHidingOnly(domain)
     return toggles
   }, {})
+}
+
+function normalizeData(siteRules: SiteRule[], schedules: NamedSchedule[]): ExtensionData {
+  const scheduleIdsById = new Set(schedules.map((schedule) => schedule.id))
+
+  const normalizedSiteRules = siteRules.map((rule) => {
+    if (rule.scheduleIds.length > 0) {
+      return {
+        ...rule,
+        scheduleIds: rule.scheduleIds.filter((scheduleId) => scheduleIdsById.has(scheduleId)),
+      }
+    }
+
+    return rule
+  })
+
+  return {
+    siteRules: normalizedSiteRules,
+    schedules,
+  }
+}
+
+export function resolveSchedulesForRule(rule: SiteRule, schedules: NamedSchedule[]): NamedSchedule[] {
+  const scheduleMap = new Map(schedules.map((schedule) => [schedule.id, schedule]))
+
+  return rule.scheduleIds
+    .map((scheduleId) => scheduleMap.get(scheduleId))
+    .filter((schedule): schedule is NamedSchedule => schedule !== undefined)
+}
+
+export function resolveSiteRules(siteRules: SiteRule[], schedules: NamedSchedule[]): ResolvedSiteRule[] {
+  return siteRules.map((rule) => ({
+    ...rule,
+    schedules: resolveSchedulesForRule(rule, schedules),
+  }))
 }
 
 export function createSiteRule(domain: string): SiteRule {
@@ -164,7 +230,7 @@ export function createSiteRule(domain: string): SiteRule {
     domain,
     enabled: !sectionOnlyRule,
     blockingMode: sectionOnlyRule ? 'scheduled' : 'always',
-    schedules: [],
+    scheduleIds: [],
     temporaryBlockUntil: null,
     presetToggles: createDefaultPresetToggles(domain),
     customSelectors: [],
@@ -173,29 +239,77 @@ export function createSiteRule(domain: string): SiteRule {
   }
 }
 
-export async function getSiteRules(): Promise<SiteRule[]> {
+export async function getExtensionData(): Promise<ExtensionData> {
   ensureStorageAvailability()
-  const storedValue = await chrome.storage.local.get(SITE_RULES_STORAGE_KEY)
-  return parseSiteRules(storedValue[SITE_RULES_STORAGE_KEY])
+  const storedValue = await chrome.storage.local.get([SITE_RULES_STORAGE_KEY, SCHEDULES_STORAGE_KEY])
+
+  try {
+    const rules = parseSiteRules(storedValue[SITE_RULES_STORAGE_KEY])
+    const schedules = parseSchedules(storedValue[SCHEDULES_STORAGE_KEY])
+
+    return normalizeData(rules, schedules)
+  } catch {
+    const emptyData: ExtensionData = {
+      siteRules: [],
+      schedules: [],
+    }
+
+    await saveExtensionData(emptyData)
+    return emptyData
+  }
+}
+
+export async function saveExtensionData(extensionData: ExtensionData): Promise<void> {
+  ensureStorageAvailability()
+  await chrome.storage.local.set({
+    [SITE_RULES_STORAGE_KEY]: extensionData.siteRules,
+    [SCHEDULES_STORAGE_KEY]: extensionData.schedules,
+  })
+}
+
+export async function getSiteRules(): Promise<SiteRule[]> {
+  return (await getExtensionData()).siteRules
 }
 
 export async function saveSiteRules(siteRules: SiteRule[]): Promise<void> {
-  ensureStorageAvailability()
-  await chrome.storage.local.set({ [SITE_RULES_STORAGE_KEY]: siteRules })
+  const extensionData = await getExtensionData()
+  await saveExtensionData({
+    ...extensionData,
+    siteRules,
+  })
 }
 
-export function watchSiteRules(onRulesChanged: (siteRules: SiteRule[]) => void): () => void {
+export async function getSchedules(): Promise<NamedSchedule[]> {
+  return (await getExtensionData()).schedules
+}
+
+export async function saveSchedules(schedules: NamedSchedule[]): Promise<void> {
+  const extensionData = await getExtensionData()
+  await saveExtensionData({
+    ...extensionData,
+    schedules,
+  })
+}
+
+export function watchExtensionData(onDataChanged: (extensionData: ExtensionData) => void): () => void {
   ensureStorageAvailability()
 
   const listener: Parameters<typeof chrome.storage.onChanged.addListener>[0] = (
     changes,
     areaName,
   ) => {
-    if (areaName !== 'local' || !changes[SITE_RULES_STORAGE_KEY]) {
+    if (areaName !== 'local') {
       return
     }
 
-    onRulesChanged(parseSiteRules(changes[SITE_RULES_STORAGE_KEY].newValue))
+    const siteRulesChange = changes[SITE_RULES_STORAGE_KEY]
+    const schedulesChange = changes[SCHEDULES_STORAGE_KEY]
+
+    if (!siteRulesChange && !schedulesChange) {
+      return
+    }
+
+    void getExtensionData().then(onDataChanged)
   }
 
   chrome.storage.onChanged.addListener(listener)
@@ -203,4 +317,10 @@ export function watchSiteRules(onRulesChanged: (siteRules: SiteRule[]) => void):
   return () => {
     chrome.storage.onChanged.removeListener(listener)
   }
+}
+
+export function watchSiteRules(onRulesChanged: (siteRules: SiteRule[]) => void): () => void {
+  return watchExtensionData((extensionData) => {
+    onRulesChanged(extensionData.siteRules)
+  })
 }

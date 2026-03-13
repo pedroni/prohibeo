@@ -1,5 +1,10 @@
 import { findMatchingRule } from '../shared/domains'
-import { getEnabledPresetSelectors, hasSectionHiding, isRuleActiveOnPage, usesSectionHidingOnly } from '../shared/presets'
+import {
+  getEnabledPresetSelectors,
+  hasSectionHiding,
+  isRuleActiveOnPage,
+  usesSectionHidingOnly,
+} from '../shared/presets'
 import {
   clearExpiredTemporaryBlocks,
   formatCountdownDuration,
@@ -8,8 +13,12 @@ import {
   getTemporaryBlockRemainingMs,
   isSiteRuleBlockingNow,
 } from '../shared/schedule'
-import { getSiteRules, saveSiteRules, watchSiteRules } from '../shared/storage'
-import type { SiteRule } from '../shared/types'
+import {
+  getExtensionData,
+  saveExtensionData,
+  watchExtensionData,
+} from '../shared/storage'
+import type { ResolvedSiteRule, SiteRule } from '../shared/types'
 
 const HIDE_STYLE_ID = 'prohibeo-hide-style'
 const OVERLAY_ID = 'prohibeo-block-overlay'
@@ -38,7 +47,7 @@ function ensureHideStyle(): HTMLStyleElement {
   return style
 }
 
-function applyHideStyle(rule: SiteRule | undefined): void {
+function applyHideStyle(rule: ResolvedSiteRule | undefined): void {
   if (!rule || !isRuleActiveOnPage(rule) || !hasSectionHiding(rule)) {
     removeHideStyle()
     return
@@ -67,8 +76,6 @@ function siteRulesChanged(left: SiteRule[], right: SiteRule[]): boolean {
   return JSON.stringify(left) !== JSON.stringify(right)
 }
 
-// Styles live inside a Shadow DOM — the page's CSS cannot pierce in.
-// Background is on .shell (the shadow "body") rather than :host so it reliably fills the space.
 const SHADOW_CSS = `
   :host {
     display: block;
@@ -124,7 +131,7 @@ const SHADOW_CSS = `
   }
 `
 
-function getBlockStatusText(rule: SiteRule, at = new Date()): string {
+function getBlockStatusText(rule: ResolvedSiteRule, at = new Date()): string {
   const temporaryBlockRemainingMs =
     rule.blockingMode === 'temporary' ? getTemporaryBlockRemainingMs(rule, at) : null
 
@@ -145,31 +152,39 @@ function getBlockStatusText(rule: SiteRule, at = new Date()): string {
   }
 
   if (active.length > 1) {
-    return active.map((s) => s.name).join(', ')
+    return active.map((schedule) => schedule.name).join(', ')
   }
 
   return 'This website is blocked.'
 }
 
-function applyBlockOverlay(rule: SiteRule, at = new Date()): void {
+function applyBlockOverlay(rule: ResolvedSiteRule, at = new Date()): void {
   const statusText = getBlockStatusText(rule, at)
   const temporaryBlockRemainingMs =
     rule.blockingMode === 'temporary' ? getTemporaryBlockRemainingMs(rule, at) : null
 
-  // If already showing, update text via shadow root (mode: 'open').
   const existing = document.getElementById(OVERLAY_ID)
+
   if (existing?.shadowRoot) {
-    const h1 = existing.shadowRoot.querySelector('h1')
+    const heading = existing.shadowRoot.querySelector('h1')
     const status = existing.shadowRoot.querySelector('.status')
     const countdown = existing.shadowRoot.querySelector('.countdown')
-    if (h1) h1.textContent = `${rule.domain} is blocked`
-    if (status) status.textContent = statusText
+
+    if (heading) {
+      heading.textContent = `${rule.domain} is blocked`
+    }
+
+    if (status) {
+      status.textContent = statusText
+    }
+
     if (countdown) {
       countdown.textContent =
         temporaryBlockRemainingMs !== null && temporaryBlockRemainingMs > 0
           ? `${formatCountdownDuration(temporaryBlockRemainingMs)} left`
           : ''
     }
+
     return
   }
 
@@ -180,10 +195,8 @@ function applyBlockOverlay(rule: SiteRule, at = new Date()): void {
 
   const overlay = document.createElement('div')
   overlay.id = OVERLAY_ID
-  // position:fixed + max z-index keeps us above everything
   overlay.setAttribute('style', 'position:fixed;inset:0;z-index:2147483647;')
 
-  // Shadow DOM gives us a hard CSS boundary — the blocked site's styles cannot pierce in
   const shadow = overlay.attachShadow({ mode: 'open' })
 
   const shadowStyle = document.createElement('style')
@@ -222,14 +235,10 @@ function applyBlockOverlay(rule: SiteRule, at = new Date()): void {
   document.documentElement.append(overlay)
 }
 
-function applyMatchingRule(siteRules: SiteRule[], at = new Date()): void {
-  const matchingRule = findMatchingRule(siteRules, window.location.hostname)
+function applyMatchingRule(siteRules: SiteRule[], schedules: ResolvedSiteRule['schedules'], at = new Date()): void {
+  const matchingRule = findMatchingRule(siteRules, schedules, window.location.hostname)
 
-  if (
-    matchingRule &&
-    isSiteRuleBlockingNow(matchingRule, at) &&
-    !usesSectionHidingOnly(matchingRule.domain)
-  ) {
+  if (matchingRule && isSiteRuleBlockingNow(matchingRule, at) && !usesSectionHidingOnly(matchingRule.domain)) {
     applyBlockOverlay(matchingRule, at)
     return
   }
@@ -241,14 +250,17 @@ function applyMatchingRule(siteRules: SiteRule[], at = new Date()): void {
 async function refreshRules(): Promise<void> {
   try {
     const currentTime = new Date()
-    const siteRules = await getSiteRules()
-    const normalizedSiteRules = clearExpiredTemporaryBlocks(siteRules, currentTime)
+    const extensionData = await getExtensionData()
+    const normalizedSiteRules = clearExpiredTemporaryBlocks(extensionData.siteRules, currentTime)
 
-    if (siteRulesChanged(siteRules, normalizedSiteRules)) {
-      await saveSiteRules(normalizedSiteRules)
+    if (siteRulesChanged(extensionData.siteRules, normalizedSiteRules)) {
+      await saveExtensionData({
+        ...extensionData,
+        siteRules: normalizedSiteRules,
+      })
     }
 
-    applyMatchingRule(normalizedSiteRules, currentTime)
+    applyMatchingRule(normalizedSiteRules, extensionData.schedules, currentTime)
   } catch (error) {
     console.error('Prohibeo failed to load rules.', error)
     removeHideStyle()
@@ -257,8 +269,8 @@ async function refreshRules(): Promise<void> {
 
 void refreshRules()
 
-watchSiteRules((siteRules) => {
-  applyMatchingRule(siteRules)
+watchExtensionData((extensionData) => {
+  applyMatchingRule(extensionData.siteRules, extensionData.schedules)
 })
 
 window.setInterval(() => {
