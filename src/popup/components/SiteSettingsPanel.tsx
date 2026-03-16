@@ -121,7 +121,7 @@ function ScheduleForm({
   }
 
   return (
-    <div className="space-y-3 border-t border-foreground/20 pt-3">
+    <div className="space-y-3 border-t border-border pt-3">
       {warningMessage ? (
         <p className="border border-yellow-500 bg-yellow-500/10 px-3 py-2 text-sm font-semibold text-yellow-700 dark:text-yellow-300">
           {warningMessage}
@@ -452,7 +452,7 @@ export function SiteSettingsPanel({
 
   return (
     <section className="flex h-full flex-col bg-background pb-4 text-foreground">
-      <header className="border-b border-foreground/20 gap-4 flex items-center px-4 py-4">
+      <header className="border-b border-border gap-4 flex items-center px-4 py-4">
         <button
           type="button"
           onClick={onClose}
@@ -468,7 +468,7 @@ export function SiteSettingsPanel({
       <div className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
         {errorMessage ? <p className="text-sm font-semibold text-red-500">{errorMessage}</p> : null}
 
-        <section className="space-y-3 border border-foreground/20 p-4">
+        <section className="space-y-3 border border-border p-4">
           <div>
             <h3 className="text-lg font-bold">Blocking</h3>
             <p className="text-sm text-muted-foreground">
@@ -501,7 +501,7 @@ export function SiteSettingsPanel({
         </section>
 
         {rule.blockingMode === 'temporary' ? (
-          <section className="space-y-3 border border-foreground/20 p-4">
+          <section className="space-y-3 border border-border p-4">
             <div>
               <h3 className="text-lg font-bold">Temporary active</h3>
             <p className="text-sm text-muted-foreground">
@@ -541,7 +541,7 @@ export function SiteSettingsPanel({
         ) : null}
 
         {rule.blockingMode === 'scheduled' ? (
-          <section className="space-y-3 border border-foreground/20 p-4">
+          <section className="space-y-3 border border-border p-4">
             <div>
               <h3 className="text-lg font-bold">Schedules</h3>
               <p className="text-sm text-muted-foreground">
@@ -558,7 +558,7 @@ export function SiteSettingsPanel({
             {assignedSchedules.map((schedule) => (
               <div
                 key={schedule.id}
-                className="flex items-center justify-between gap-3 border-t border-foreground/20 py-3"
+                className="flex items-center justify-between gap-3 border-t border-border py-3"
               >
                 <div className="min-w-0">
                   <p className="font-bold">{schedule.name}</p>
@@ -582,7 +582,7 @@ export function SiteSettingsPanel({
             ))}
 
             {scheduleOptions.length > 0 ? (
-              <div className="space-y-2 border-t border-foreground/20 pt-3">
+              <div className="space-y-2 border-t border-border pt-3">
                 <p className="text-sm font-bold">Add existing schedule</p>
                 <Selectable
                   value={schedulePickerValue}
@@ -621,7 +621,7 @@ export function SiteSettingsPanel({
         ) : null}
 
         {presetOptions.length > 0 ? (
-          <section className="space-y-4 border border-foreground/20 p-4">
+          <section className="space-y-4 border border-border p-4">
             <div>
               <h3 className="text-lg font-bold">Eliminate distractions</h3>
               <p className="text-sm text-muted-foreground">
@@ -635,7 +635,7 @@ export function SiteSettingsPanel({
               {presetOptions.map((option) => (
                 <div
                   key={option.key}
-                  className="flex items-start justify-between gap-3 border-t border-foreground/20 pt-4 first:border-t-0 first:pt-0"
+                  className="flex items-start justify-between gap-3 border-t border-border pt-4 first:border-t-0 first:pt-0"
                 >
                   <div className="min-w-0 flex-1 space-y-1">
                     <p className="font-bold">{option.label}</p>
@@ -653,7 +653,7 @@ export function SiteSettingsPanel({
           </section>
         ) : null}
 
-        <section className="space-y-4 border border-foreground/20 p-4">
+        <section className="space-y-4 border border-border p-4">
           <div>
             <h3 className="text-lg font-bold">Custom selectors</h3>
             <p className="text-sm text-muted-foreground">
@@ -680,7 +680,7 @@ export function SiteSettingsPanel({
           </div>
 
           {selectorError ? (
-            <p className="border border-foreground/20 px-3 py-2 text-sm font-semibold">
+            <p className="border border-border px-3 py-2 text-sm font-semibold">
               {selectorError}
             </p>
           ) : null}
@@ -690,7 +690,7 @@ export function SiteSettingsPanel({
               {rule.customSelectors.map((selector) => (
                 <div
                   key={selector}
-                  className="flex items-center justify-between gap-3 border border-foreground/20 px-3 py-2"
+                  className="flex items-center justify-between gap-3 border border-border px-3 py-2"
                 >
                   <code className="min-w-0 flex-1 truncate text-sm">{selector}</code>
                   <ConfirmDeleteButton

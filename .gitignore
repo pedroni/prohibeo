@@ -27,3 +27,15 @@ dist.zip
 # astro
 site/.astro
 .astro
+
+# generated branding assets
+src/assets/icon16.png
+src/assets/icon32.png
+src/assets/icon48.png
+src/assets/icon128.png
+src/assets/logo.png
+src/assets/logo.svg
+site/public/favicon.ico
+site/public/favicon.png
+site/public/logo.png
+site/public/logo.svg

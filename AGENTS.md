@@ -35,8 +35,8 @@ Use these shared components instead of re-implementing the same primitive separa
 - Do not style `Button` instances with ad-hoc `className` overrides
 - Prefer explicit props like `variant` and `size`
 - Current API is intentionally small:
-  - `variant`: `primary | secondary`
-  - `size`: `xs | md | lg`
+  - `variant`: `primary | secondary | danger`
+  - `size`: `xxs | xs | sm | md | lg | icon`
 - `Button` can render either a native `button` or a link when `href` is provided
 
 If a new visual treatment is needed, extend the component API instead of pushing styling into call sites.
@@ -67,7 +67,7 @@ Use semantic utilities like:
 
 - `bg-background`
 - `text-foreground`
-- `border-foreground/20`
+- `border-border`
 - `text-muted-foreground`
 - `bg-primary`
 - `text-primary-foreground`
@@ -87,9 +87,11 @@ Primary colors invert appropriately between light and dark through the shared to
 
 ### Border conventions
 
-For standard component borders, prefer `border-foreground/20`.
+For standard component borders, prefer `border-border`.
 
-That keeps the border treatment explicit and consistent without adding an extra border token abstraction.
+Use `border-foreground` only for higher-emphasis or active states.
+
+That keeps the border treatment explicit and consistent while letting the neutral border color stay solid across light and dark themes.
 
 ### Hover conventions
 
@@ -116,7 +118,7 @@ The site uses a contained shell layout:
 Header navigation links should:
 
 - fill the header cell height
-- be separated with `border-foreground/20`
+- be separated with `border-border`
 - use subtle `foreground/20` hover fills
 
 ## Extension-specific guidance
@@ -137,6 +139,13 @@ The content script’s blocked-page UI should also honor the shared light/dark p
 Use **Prohibeo** as the product name.
 
 Do not reintroduce old `Distractio` branding in visible copy, routes, metadata, package names, or starter content.
+
+Brand assets are generated, not edited by hand.
+
+- source: `scripts/generate-branding.mjs`
+- command: `npm run generate:branding`
+- outputs: extension icons in `src/assets/` and site branding files in `site/public/`
+- generated branding files are gitignored
 
 ## Build and validation commands
 
@@ -174,7 +183,7 @@ If a component starts requiring repeated caller-side styling, that is a signal t
 
 When rendering a repeated list of items (e.g. schedules, selectors, rules), use a top-border separator between rows rather than boxing each item individually.
 
-- Use `border-t border-foreground/20` on each row
+- Use `border-t border-border` on each row
 - No horizontal padding (`px-*`) on the rows themselves; let the parent section provide horizontal spacing
 - Vertical padding (`py-*`) on each row for breathing room
 

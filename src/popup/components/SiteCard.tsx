@@ -31,7 +31,7 @@ function Badge({ children, active = false }: { children: ReactNode; active?: boo
       className={`border px-2 py-1 text-xs font-semibold ${
         active
           ? 'border-foreground bg-foreground text-background'
-          : 'border-foreground/20 bg-background text-foreground'
+          : 'border-border bg-background text-foreground'
       }`}
     >
       {children}
@@ -77,11 +77,11 @@ export function SiteCard({ now, rule, schedules, onEdit, onRemove }: SiteCardPro
   const blockingNow = isSiteRuleBlockingNow(resolvedRule, now)
 
   return (
-    <article className="group border border-foreground/20 p-4">
+    <article className="group border border-border p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-3">
-            <span className="inline-flex h-9 w-9! shrink-0 items-center justify-center border border-foreground/20">
+            <span className="inline-flex h-9 w-9! shrink-0 items-center justify-center border border-border">
               <FontAwesomeIcon
                 icon={getSiteIcon(rule.domain)}
                 className={`text-muted-foreground transition-colors ${getSiteIconHoverClassName(rule.domain)}`}

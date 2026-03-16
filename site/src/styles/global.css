@@ -8,6 +8,7 @@
     sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-border: var(--border);
   --color-muted-foreground: var(--muted-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
@@ -16,6 +17,7 @@
 :root {
   --background: #fff;
   --foreground: #000;
+  --border: #262626;
   --muted-foreground: #525252;
   --primary: #000;
   --primary-foreground: #fff;
@@ -49,6 +51,7 @@ a {
   :root {
     --background: #131313;
     --foreground: #e6e6e6;
+    --border: #5c5c5c;
     --muted-foreground: #a3a3a3;
     --primary: #e6e6e6;
     --primary-foreground: #131313;

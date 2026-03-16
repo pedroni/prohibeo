@@ -11,6 +11,7 @@ import {
 import type { ExtensionData, NamedSchedule, SiteRule } from '../shared/types'
 
 import { HomeScreen } from './components/HomeScreen'
+import { PopupSponsorSupport } from './components/PopupSponsorSupport'
 import { SiteSettingsPanel } from './components/SiteSettingsPanel'
 
 function pruneUnusedSchedules(siteRules: SiteRule[], schedules: NamedSchedule[]): NamedSchedule[] {
@@ -248,7 +249,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-[560px] w-[420px] overflow-hidden bg-background text-foreground">
+    <div className="relative h-[560px] w-[420px] overflow-hidden bg-background text-foreground">
       {selectedSiteRule ? (
         <SiteSettingsPanel
           now={currentTime}
@@ -288,6 +289,7 @@ export default function App() {
           }}
         />
       )}
+      <PopupSponsorSupport />
     </div>
   )
 }

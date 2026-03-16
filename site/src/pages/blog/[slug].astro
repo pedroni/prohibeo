@@ -1,4 +1,5 @@
 ---
+import { Button } from '@ui/Button';
 import type { CollectionEntry } from 'astro:content';
 import { formatBlogPublishDate, getPublishedBlogPosts } from '../../blog';
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -19,6 +20,11 @@ interface Props {
 
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
+const relatedPosts = (await getPublishedBlogPosts())
+  .filter((entry) => entry.id !== post.id)
+  .slice(0, 2);
+const chromeLogoUrl = '/chrome-logo.svg';
+const installUrl = 'https://chromewebstore.google.com/category/extensions';
 ---
 
 <BaseLayout
@@ -28,7 +34,7 @@ const { Content, headings } = await render(post);
 >
   <div class="flex">
     <main class="flex-1">
-      <article class="border-t border-foreground/20 px-6 py-8 md:px-8 md:py-10">
+      <article class="border-t border-border px-6 py-8 md:px-8 md:py-10">
         <a class="text-sm text-muted-foreground" href="/blog/">Back to blog</a>
         <h1 class="mt-4 mb-2 text-[2.25rem] leading-none font-bold tracking-[-0.04em] md:text-[3rem]">
           {post.data.title}
@@ -42,16 +48,56 @@ const { Content, headings } = await render(post);
           prose-headings:font-bold prose-headings:tracking-[-0.04em]
           prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-2xl prose-h2:scroll-mt-24
           prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-xl prose-h3:scroll-mt-24
-          prose-code:border prose-code:border-foreground/20 prose-code:px-1 prose-code:py-0.5
-          prose-pre:border prose-pre:border-foreground/20 prose-pre:p-4
+          prose-code:border prose-code:border-border prose-code:px-1 prose-code:py-0.5
+          prose-pre:border prose-pre:border-border prose-pre:p-4
           prose-a:underline
         ">
           <Content />
         </div>
+        <div class="mt-10 max-w-3xl border-t border-border pt-6">
+          <p class="text-sm font-semibold">Keep Chrome quieter.</p>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Block distracting sites, hide noisy sections, and keep mixed-use pages usable.
+          </p>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <Button href={installUrl} size="sm">
+              Add to Chrome
+              <img alt="" class="h-4 w-4" src={chromeLogoUrl} />
+            </Button>
+            <a class="text-sm text-muted-foreground underline hover:text-foreground" href="/blog/">
+              More notes
+            </a>
+          </div>
+        </div>
+        {relatedPosts.length > 0 && (
+          <div class="mt-10 max-w-3xl border-t border-border pt-6">
+            <h2 class="text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Read next
+            </h2>
+            <div class="mt-4 grid gap-4 md:grid-cols-2">
+              {relatedPosts.map((relatedPost) => (
+                <a
+                  class="border border-border p-4 transition-colors hover:bg-foreground/20"
+                  href={`/blog/${relatedPost.id}/`}
+                >
+                  <time
+                    class="block text-sm text-muted-foreground"
+                    datetime={relatedPost.data.publishDate.toISOString()}
+                  >
+                    {formatBlogPublishDate(relatedPost.data.publishDate)}
+                  </time>
+                  <span class="mt-2 block text-base font-semibold">
+                    {relatedPost.data.title}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </article>
     </main>
     {headings.length > 0 && (
-      <aside class="hidden lg:block w-64 shrink-0 border-t border-foreground/20 py-8 pr-8">
+      <aside class="hidden lg:block w-64 shrink-0 border-t border-border py-8 pr-8">
         <nav class="sticky top-24">
           <h4 class="mb-4 text-sm font-semibold text-muted-foreground">On this page</h4>
           <ul class="space-y-2 text-sm" id="toc-list">

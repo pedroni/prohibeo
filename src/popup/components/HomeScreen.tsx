@@ -2,10 +2,11 @@ import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useState, type FormEvent } from 'react'
 
-import logoUrl from '../../assets/logo.png'
+import logoUrl from '../../assets/logo.svg'
 import type { NamedSchedule, SiteRule } from '../../shared/types'
 
 import { Button } from '@ui/Button'
+import { IssueButton, SponsorButton } from './PopupSponsorSupport'
 import { SiteCard } from './SiteCard'
 import { SiteSelectable } from './SiteSelectable'
 
@@ -41,17 +42,24 @@ export function HomeScreen({
 
   return (
     <div className="flex h-full flex-col">
-      <header className="sticky top-0 z-10 border-b border-foreground/20 bg-background px-4 py-4">
+      <header className="sticky top-0 z-10 border-b border-border bg-background px-4 py-4">
         <div className="flex min-h-10 items-center gap-4">
           <img
             src={logoUrl}
             alt="Prohibeo logo"
-            className="h-10 w-10 border border-foreground/20 object-cover"
+            className="h-10 w-10 border border-border object-cover"
           />
-          <div>
-            <h1 className="text-2xl font-bold leading-none">Prohibeo</h1>
+          <div className="relative min-w-0 flex-1 pr-28">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold leading-none">Prohibeo</h1>
+            </div>
+            <div className="absolute right-0 top-0 flex items-center gap-1">
+              <IssueButton />
+              <SponsorButton label="Sponsor" size="xxs" variant="secondary" />
+            </div>
             <p className="min-w-0 overflow-hidden text-sm leading-5 text-muted-foreground">
-              Block websites and hide distracting sections.
+                Less Noise. More focus. <br />
+                Access what matters. Hide what doesn't.
             </p>
           </div>
         </div>
@@ -59,7 +67,7 @@ export function HomeScreen({
 
       <main className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <div className="space-y-3">
-          <form onSubmit={handleAddWebsite} className="space-y-3 border border-foreground/20 p-4">
+          <form onSubmit={handleAddWebsite} className="space-y-3 border border-border p-4">
             <div>
               <h2 className="text-lg font-bold">Website to block</h2>
               <p className="text-sm text-muted-foreground">
@@ -102,7 +110,7 @@ export function HomeScreen({
           {isLoading ? <p className="text-sm text-muted-foreground">Loading your settings...</p> : null}
 
           {!isLoading && siteRules.length === 0 ? (
-            <div className="border border-foreground/20 p-4">
+            <div className="border border-border p-4">
               <p className="text-base font-bold">No websites added yet.</p>
               <p className="text-sm text-muted-foreground">
                 Add a domain to start blocking full pages or hiding specific sections.

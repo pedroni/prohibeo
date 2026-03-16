@@ -4,7 +4,11 @@ export default defineManifest({
   manifest_version: 3,
   name: 'Prohibeo',
   version: '0.1.0',
-  description: 'Block websites and hide distracting sections with schedule-based rules.',
+  description: "Less noise. More focus. Access what matters. Hide what doesn't. Block on your terms.",
+  content_security_policy: {
+    extension_pages:
+      "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:",
+  },
   permissions: ['storage'],
   host_permissions: ['http://*/*', 'https://*/*'],
   action: {

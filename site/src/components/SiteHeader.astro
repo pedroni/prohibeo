@@ -5,16 +5,16 @@ import SiteBrand from "./SiteBrand.astro";
 import SponsorHeartLink from "./SponsorHeartLink.astro";
 
 const navItemClass =
-    "border-t border-foreground/20 px-6 py-3 transition-colors hover:bg-foreground/20 md:border-t-0 md:border-l md:border-foreground/20 md:px-5 md:py-0";
+    "border-t border-border px-6 py-3 transition-colors hover:bg-foreground/20 md:border-t-0 md:border-l md:border-border md:px-5 md:py-0";
 ---
 
-<header class="sticky top-0 z-10 bg-background border-b border-foreground/20">
+<header class="sticky top-0 z-10 bg-background border-b border-border">
     <div
         class="flex w-full flex-col md:flex-row md:items-stretch md:justify-between"
     >
         <SiteBrand class="px-6 py-5 md:px-8" />
         <nav
-            class="flex flex-col border-t border-foreground/20 text-sm md:flex-row md:self-stretch md:border-t-0"
+            class="flex flex-col border-t border-border text-sm md:flex-row md:self-stretch md:border-t-0"
             aria-label="Primary"
         >
             <a class={`flex items-center ${navItemClass}`} href="/blog/">Blog</a

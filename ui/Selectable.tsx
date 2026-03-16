@@ -125,7 +125,7 @@ export function Selectable<TValue extends string>({
         }
       }}
     >
-      <div className={`flex border border-foreground/20 bg-background ${open ? 'bg-foreground/5' : ''}`}>
+      <div className={`flex border border-border bg-background ${open ? 'bg-foreground/5' : ''}`}>
         <input
           ref={inputRef}
           role="combobox"
@@ -152,7 +152,7 @@ export function Selectable<TValue extends string>({
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={listId}
-          className="border-l border-foreground/20 px-3 hover:bg-foreground/20"
+          className="border-l border-border px-3 hover:bg-foreground/20"
           onClick={() => setOpen((previous) => !previous)}
         >
           <FontAwesomeIcon
@@ -167,7 +167,7 @@ export function Selectable<TValue extends string>({
           ref={listRef}
           id={listId}
           role="listbox"
-          className="absolute left-0 right-0 top-full z-20 max-h-52 overflow-y-auto border border-t-0 border-foreground/20 bg-background"
+          className="absolute left-0 right-0 top-full z-20 max-h-52 overflow-y-auto border border-t-0 border-border bg-background"
         >
           {filteredOptions.length > 0 ? (
             filteredOptions.map((option, index) => (

@@ -15,6 +15,7 @@ import {
 
 const SITE_RULES_STORAGE_KEY = 'siteRules'
 const SCHEDULES_STORAGE_KEY = 'schedules'
+const POPUP_QUALIFIED_OPEN_COUNT_STORAGE_KEY = 'popupQualifiedOpenCount'
 
 function ensureStorageAvailability(): void {
   if (typeof chrome === 'undefined' || !chrome.storage?.local) {
@@ -179,6 +180,18 @@ function parseSchedules(value: unknown): NamedSchedule[] {
   return value.map((schedule, index) => parseNamedSchedule(schedule, index))
 }
 
+function parsePopupQualifiedOpenCount(value: unknown): number {
+  if (value === undefined) {
+    return 0
+  }
+
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    throw new Error('Stored popup open count is malformed.')
+  }
+
+  return value
+}
+
 function createDefaultPresetToggles(domain: string): PresetToggles {
   return getPresetOptionsForDomain(domain).reduce<PresetToggles>((toggles, option) => {
     toggles[option.key] = usesSectionHidingOnly(domain)
@@ -258,6 +271,30 @@ export async function saveExtensionData(extensionData: ExtensionData): Promise<v
     [SITE_RULES_STORAGE_KEY]: extensionData.siteRules,
     [SCHEDULES_STORAGE_KEY]: extensionData.schedules,
   })
+}
+
+export async function getPopupQualifiedOpenCount(): Promise<number> {
+  ensureStorageAvailability()
+
+  try {
+    const storedValue = await chrome.storage.local.get(POPUP_QUALIFIED_OPEN_COUNT_STORAGE_KEY)
+    return parsePopupQualifiedOpenCount(storedValue[POPUP_QUALIFIED_OPEN_COUNT_STORAGE_KEY])
+  } catch (error) {
+    console.error('Prohibeo could not parse stored popup open count.', error)
+    throw new Error('Stored Prohibeo popup state is malformed. Clear extension storage to recover.')
+  }
+}
+
+export async function recordQualifiedPopupOpen(): Promise<number> {
+  ensureStorageAvailability()
+  const currentCount = await getPopupQualifiedOpenCount()
+  const nextCount = currentCount + 1
+
+  await chrome.storage.local.set({
+    [POPUP_QUALIFIED_OPEN_COUNT_STORAGE_KEY]: nextCount,
+  })
+
+  return nextCount
 }
 
 export async function getSiteRules(): Promise<SiteRule[]> {

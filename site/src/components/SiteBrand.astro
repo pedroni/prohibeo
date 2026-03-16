@@ -7,11 +7,11 @@ const { class: className = '' } = Astro.props;
 ---
 
 <a class={`inline-flex items-center gap-3 text-base font-extrabold tracking-[-0.03em] ${className}`} href="/">
-  <span
+  <img
+    src="/logo.svg"
+    alt=""
     aria-hidden="true"
-    class="inline-flex h-10 w-10 items-center justify-center border border-foreground/20"
-  >
-    P
-  </span>
+    class="h-10 w-10 border border-border"
+  />
   <span>Prohibeo</span>
 </a>

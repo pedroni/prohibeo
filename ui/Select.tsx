@@ -9,7 +9,7 @@ type SelectProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, 'size'> & {
 function getSelectClassName(size: SelectSize, className?: string): string {
   const sizeClassName = size === 'lg' ? 'px-4 py-3 text-base' : 'px-3 py-2 text-sm'
 
-  return `w-full border border-foreground/20 bg-background text-foreground outline-none focus:bg-foreground/5 ${sizeClassName} ${className ?? ''}`.trim()
+  return `w-full border border-border bg-background text-foreground outline-none focus:bg-foreground/5 ${sizeClassName} ${className ?? ''}`.trim()
 }
 
 export function Select({ className, size = 'md', ...props }: SelectProps) {
