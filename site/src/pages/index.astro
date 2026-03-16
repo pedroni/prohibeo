@@ -4,6 +4,7 @@ import { formatBlogPublishDate, getPublishedBlogPosts } from "../blog";
 import ExtensionPreview from "../components/ExtensionPreview.astro";
 import GridBox from "../components/GridBox.astro";
 import SectionIntro from "../components/SectionIntro.astro";
+import SponsorHeartLink from "../components/SponsorHeartLink.astro";
 import SectionTitle from "../components/SectionTitle.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
@@ -13,8 +14,8 @@ const recentPosts = (await getPublishedBlogPosts()).slice(0, 3);
 ---
 
 <BaseLayout
-    title="Prohibeo | Less noise. More focus."
-    description="Block distracting sites, hide noisy page sections, and run schedules that keep Chrome calm."
+    title="Prohibeo | Block distractions and calm your browser"
+    description="Prohibeo is a Chrome focus tool for blocking distracting sites, running focus schedules, and hiding noisy parts of pages without making the web harder to use."
     pathname="/"
 >
     <main>
@@ -26,7 +27,7 @@ const recentPosts = (await getPublishedBlogPosts()).slice(0, 3);
                     <span
                         class="inline-flex border border-border px-3 py-1 text-xs font-bold uppercase tracking-[0.08em]"
                     >
-                        Less noise. More focus.
+                        Chrome focus tool for calmer browsing
                     </span>
                     <h1 class="mt-6 text-5xl font-bold md:text-6xl">
                         Block distractions without turning the web into a fight.
@@ -34,22 +35,27 @@ const recentPosts = (await getPublishedBlogPosts()).slice(0, 3);
                     <p
                         class="mt-4 max-w-2xl text-base leading-7 text-muted-foreground"
                     >
-                        Block what pulls you away. Hide what you do not need.
-                        Keep the useful part of the web, privately in Chrome.
+                        Prohibeo is a simple Chrome focus tool that helps you
+                        stay with what matters. Block distracting sites, run
+                        schedules that match your day, and hide the noisy parts
+                        of pages you still want to use - all privately on your
+                        device.
                     </p>
                     <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                         <Button
                             href="https://chromewebstore.google.com/category/extensions"
                             size="lg"
                         >
-                            Add to Chrome
+                            Add Prohibeo
                             <img alt="" class="h-4 w-4" src={chromeLogoUrl} />
                         </Button>
                     </div>
                     <p
                         class="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground"
                     >
-                        Free to use. No account. Runs locally in Chrome.
+                        Free to use. If it helps, a little
+                        <SponsorHeartLink class="align-middle" />
+                        is always appreciated.
                     </p>
                 </div>
                 <ExtensionPreview />
@@ -58,34 +64,39 @@ const recentPosts = (await getPublishedBlogPosts()).slice(0, 3);
 
         <section id="who-its-for" class="border-t border-border">
             <SectionIntro>
-                <SectionTitle>Three clean controls</SectionTitle>
+                <SectionTitle>Built for real attention</SectionTitle>
                 <p class="text-base leading-7 text-muted-foreground">
-                    Prohibeo does three things well: block the sites that derail
-                    you, strip noise from pages you still need, and run on rules
-                    you can actually live with.
+                    Prohibeo is for people who want a little more control
+                    online without turning the day into a productivity system.
+                    It makes fewer distractions the default, whether you are
+                    working, studying, or trying to stay with one thing longer.
                 </p>
             </SectionIntro>
             <div class="grid grid-cols-1 pl-px pt-px md:grid-cols-3">
                 <GridBox as="article">
-                    <h3 class="mb-4 text-lg font-semibold">Block any site</h3>
+                    <h3 class="mb-4 text-lg font-semibold">For busy professionals</h3>
                     <p class="text-sm leading-6 text-muted-foreground">
-                        Use a full block when a site rarely helps and usually
-                        steals time. Make the decision once and move on.
+                        When work happens in the browser, it is easy to drift
+                        into tabs you never meant to open. Prohibeo helps
+                        protect the hours that need your full attention.
                     </p>
                 </GridBox>
                 <GridBox as="article">
-                    <h3 class="mb-4 text-lg font-semibold">Hide the noisy parts</h3>
+                    <h3 class="mb-4 text-lg font-semibold">For harder focus days</h3>
                     <p class="text-sm leading-6 text-muted-foreground">
-                        Keep the page. Remove the comments, feeds,
-                        recommendations, and sidebars that pull you off course.
+                        If you have ADHD, or focus is simply harder some days,
+                        Prohibeo can make your browser feel calmer and more
+                        intentional. It is not a fix, just a practical way to
+                        remove easy detours.
                     </p>
                 </GridBox>
                 <GridBox as="article">
-                    <h3 class="mb-4 text-lg font-semibold">Block on your terms</h3>
+                    <h3 class="mb-4 text-lg font-semibold">For students and creators</h3>
                     <p class="text-sm leading-6 text-muted-foreground">
-                        Run rules all day, on a schedule, or just for now. Keep
-                        your setup strict when it should be, and light when it
-                        should not.
+                        When messages, entertainment, and side quests are close
+                        by, deep work gets harder. Prohibeo helps you stay with
+                        the assignment, draft, or idea in front of you long
+                        enough to make progress.
                     </p>
                 </GridBox>
             </div>
@@ -96,17 +107,19 @@ const recentPosts = (await getPublishedBlogPosts()).slice(0, 3);
                 <div class="grid gap-4">
                     <div class="mx-auto text-center max-w-3xl">
                         <SectionTitle
-                            >Access what matters. Hide what does not.</SectionTitle
+                            >Make your browser a little quieter</SectionTitle
                         >
                         <p class="mb-6 text-base leading-7 text-muted-foreground">
-                            Keep useful sites usable and distracting loops out of
-                            the way.
+                            Prohibeo helps you block the sites that pull you off
+                            course, without turning your day into a battle of
+                            willpower. Set your rules once, keep your browsing
+                            calm, and let your browser do less of the tempting.
                         </p>
                         <Button
                             href="https://chromewebstore.google.com/category/extensions"
                             size="lg"
                         >
-                            Add to Chrome
+                            Add Prohibeo
                             <img alt="" class="h-4 w-4" src={chromeLogoUrl} />
                         </Button>
                     </div>
@@ -121,8 +134,10 @@ const recentPosts = (await getPublishedBlogPosts()).slice(0, 3);
                     <div class="max-w-3xl">
                         <SectionTitle>Private by design</SectionTitle>
                         <p class="text-base leading-7 text-muted-foreground">
-                            Your rules stay in Chrome. No account. No analytics.
-                            No app data leaving the extension for core features.
+                            Prohibeo runs locally in your browser. The rules you
+                            create stay on your device. There are no tracking
+                            scripts, no analytics, and no account system sitting
+                            behind the product.
                         </p>
                     </div>
                     <ul
@@ -139,10 +154,11 @@ const recentPosts = (await getPublishedBlogPosts()).slice(0, 3);
 
         <section class="border-t border-border">
             <SectionIntro>
-                <SectionTitle>Notes</SectionTitle>
+                <SectionTitle>Learn More</SectionTitle>
                 <p class="text-base leading-7 text-muted-foreground">
-                    Short guides on cleaner browsing, mixed-use sites, and
-                    better defaults for focus.
+                    Notes on calmer browsing, better focus habits, and small
+                    ways to make the internet less interruptive - plus product
+                    updates as Prohibeo grows.
                 </p>
             </SectionIntro>
             {

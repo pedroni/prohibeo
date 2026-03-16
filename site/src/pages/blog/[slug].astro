@@ -1,5 +1,4 @@
 ---
-import { Button } from '@ui/Button';
 import type { CollectionEntry } from 'astro:content';
 import { formatBlogPublishDate, getPublishedBlogPosts } from '../../blog';
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -20,11 +19,6 @@ interface Props {
 
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
-const relatedPosts = (await getPublishedBlogPosts())
-  .filter((entry) => entry.id !== post.id)
-  .slice(0, 2);
-const chromeLogoUrl = '/chrome-logo.svg';
-const installUrl = 'https://chromewebstore.google.com/category/extensions';
 ---
 
 <BaseLayout
@@ -54,46 +48,6 @@ const installUrl = 'https://chromewebstore.google.com/category/extensions';
         ">
           <Content />
         </div>
-        <div class="mt-10 max-w-3xl border-t border-border pt-6">
-          <p class="text-sm font-semibold">Keep Chrome quieter.</p>
-          <p class="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Block distracting sites, hide noisy sections, and keep mixed-use pages usable.
-          </p>
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <Button href={installUrl} size="sm">
-              Add to Chrome
-              <img alt="" class="h-4 w-4" src={chromeLogoUrl} />
-            </Button>
-            <a class="text-sm text-muted-foreground underline hover:text-foreground" href="/blog/">
-              More notes
-            </a>
-          </div>
-        </div>
-        {relatedPosts.length > 0 && (
-          <div class="mt-10 max-w-3xl border-t border-border pt-6">
-            <h2 class="text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Read next
-            </h2>
-            <div class="mt-4 grid gap-4 md:grid-cols-2">
-              {relatedPosts.map((relatedPost) => (
-                <a
-                  class="border border-border p-4 transition-colors hover:bg-foreground/20"
-                  href={`/blog/${relatedPost.id}/`}
-                >
-                  <time
-                    class="block text-sm text-muted-foreground"
-                    datetime={relatedPost.data.publishDate.toISOString()}
-                  >
-                    {formatBlogPublishDate(relatedPost.data.publishDate)}
-                  </time>
-                  <span class="mt-2 block text-base font-semibold">
-                    {relatedPost.data.title}
-                  </span>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
       </article>
     </main>
     {headings.length > 0 && (
