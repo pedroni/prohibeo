@@ -7,6 +7,7 @@ on:
     paths:
       - 'site/**'
       - 'ui/**'
+      - 'scripts/generate-branding.mjs'
       - 'package.json'
       - 'package-lock.json'
       - 'site/package.json'
@@ -45,8 +46,7 @@ jobs:
         working-directory: site
 
       - name: Build site
-        run: npm run build
-        working-directory: site
+        run: npm run site:build
         env:
           SITE_URL: https://prohibeo.com
 
