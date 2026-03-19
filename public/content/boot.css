@@ -1,0 +1,14 @@
+html:not([data-prohibeo-page-state='ready']) {
+  background: #ffffff !important;
+}
+
+html:not([data-prohibeo-page-state='ready']) body,
+html:not([data-prohibeo-page-state='ready']) body * {
+  visibility: hidden !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-prohibeo-page-state='ready']) {
+    background: #131313 !important;
+  }
+}

@@ -7,7 +7,7 @@ export default defineManifest({
   description: "Less noise. More focus. Access what matters. Hide what doesn't. Block on your terms.",
   content_security_policy: {
     extension_pages:
-      "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:",
+      "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:",
   },
   permissions: ['storage'],
   host_permissions: ['http://*/*', 'https://*/*'],
@@ -30,6 +30,7 @@ export default defineManifest({
   content_scripts: [
     {
       matches: ['http://*/*', 'https://*/*'],
+      css: ['content/boot.css'],
       js: ['src/content/index.ts'],
       run_at: 'document_start',
     },

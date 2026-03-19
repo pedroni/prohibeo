@@ -23,6 +23,8 @@ import type { ExtensionData, ResolvedSiteRule, SiteRule } from '../shared/types'
 const HIDE_STYLE_ID = 'prohibeo-hide-style'
 const OVERLAY_ID = 'prohibeo-block-overlay'
 const SCROLL_LOCK_ID = 'prohibeo-scroll-lock'
+const CONTENT_SCRIPT_MARKER_ATTRIBUTE = 'data-prohibeo-content-script-loaded'
+const PAGE_STATE_ATTRIBUTE = 'data-prohibeo-page-state'
 const TRANSITION_REFRESH_BUFFER_MS = 250
 
 let scheduledRefreshId: number | null = null
@@ -50,6 +52,18 @@ function ensureHideStyle(): HTMLStyleElement {
   return style
 }
 
+function setPageState(state: 'booting' | 'blocked' | 'ready'): void {
+  document.documentElement.setAttribute(PAGE_STATE_ATTRIBUTE, state)
+}
+
+function ensureBootGuard(): void {
+  setPageState('booting')
+}
+
+function removeBootGuard(): void {
+  setPageState('ready')
+}
+
 function applyHideStyle(rule: ResolvedSiteRule | undefined): void {
   if (!rule || !hasSectionHiding(rule)) {
     removeHideStyle()
@@ -73,6 +87,21 @@ function applyHideStyle(rule: ResolvedSiteRule | undefined): void {
 function removeBlockOverlay(): void {
   document.getElementById(OVERLAY_ID)?.remove()
   document.getElementById(SCROLL_LOCK_ID)?.remove()
+}
+
+function getOverlayMountTarget(): HTMLElement {
+  return document.documentElement
+}
+
+function applyOverlayHostStyle(overlay: HTMLElement): void {
+  overlay.style.setProperty('all', 'initial', 'important')
+  overlay.style.setProperty('position', 'fixed', 'important')
+  overlay.style.setProperty('inset', '0', 'important')
+  overlay.style.setProperty('z-index', '2147483647', 'important')
+  overlay.style.setProperty('display', 'block', 'important')
+  overlay.style.setProperty('visibility', 'visible', 'important')
+  overlay.style.setProperty('opacity', '1', 'important')
+  overlay.style.setProperty('pointer-events', 'auto', 'important')
 }
 
 function clearScheduledRefresh(): void {
@@ -103,8 +132,22 @@ function siteRulesChanged(left: SiteRule[], right: SiteRule[]): boolean {
   return JSON.stringify(left) !== JSON.stringify(right)
 }
 
+function markContentScriptLoaded(): boolean {
+  const root = document.documentElement
+
+  if (!root) {
+    return true
+  }
+
+  if (root.hasAttribute(CONTENT_SCRIPT_MARKER_ATTRIBUTE)) {
+    return false
+  }
+
+  root.setAttribute(CONTENT_SCRIPT_MARKER_ATTRIBUTE, 'true')
+  return true
+}
+
 const SHADOW_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
   :host {
     display: block;
   }
@@ -122,7 +165,7 @@ const SHADOW_CSS = `
     padding: 24px;
     background: #ffffff;
     color: #000000;
-    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     color-scheme: light dark;
@@ -187,13 +230,22 @@ function getBlockStatusText(rule: ResolvedSiteRule, at = new Date()): string {
 }
 
 function applyBlockOverlay(rule: ResolvedSiteRule, at = new Date()): void {
+  setPageState('blocked')
+
   const statusText = getBlockStatusText(rule, at)
   const temporaryBlockRemainingMs =
     rule.blockingMode === 'temporary' ? getTemporaryBlockRemainingMs(rule, at) : null
+  const mountTarget = getOverlayMountTarget()
 
   const existing = document.getElementById(OVERLAY_ID)
 
   if (existing?.shadowRoot) {
+    if (existing.parentElement !== mountTarget) {
+      mountTarget.append(existing)
+    }
+
+    applyOverlayHostStyle(existing)
+
     const heading = existing.shadowRoot.querySelector('h1')
     const status = existing.shadowRoot.querySelector('.status')
     const countdown = existing.shadowRoot.querySelector('.countdown')
@@ -223,7 +275,7 @@ function applyBlockOverlay(rule: ResolvedSiteRule, at = new Date()): void {
 
   const overlay = document.createElement('div')
   overlay.id = OVERLAY_ID
-  overlay.setAttribute('style', 'position:fixed;inset:0;z-index:2147483647;')
+  applyOverlayHostStyle(overlay)
 
   const shadow = overlay.attachShadow({ mode: 'open' })
 
@@ -260,7 +312,7 @@ function applyBlockOverlay(rule: ResolvedSiteRule, at = new Date()): void {
   card.append(brand, heading, status, countdown, hint)
   shell.append(card)
   shadow.append(shadowStyle, shell)
-  document.documentElement.append(overlay)
+  mountTarget.append(overlay)
 }
 
 function applyMatchingRule(siteRules: SiteRule[], schedules: ResolvedSiteRule['schedules'], at = new Date()): void {
@@ -269,9 +321,11 @@ function applyMatchingRule(siteRules: SiteRule[], schedules: ResolvedSiteRule['s
 
   if (matchingRule && blockingNow && !usesSectionHidingOnly(matchingRule.domain)) {
     applyBlockOverlay(matchingRule, at)
+    scheduleRefreshAt(getNextRuleTransition(matchingRule, at))
     return
   }
 
+  removeBootGuard()
   removeBlockOverlay()
   applyHideStyle(blockingNow ? matchingRule : undefined)
   scheduleRefreshAt(matchingRule ? getNextRuleTransition(matchingRule, at) : null)
@@ -295,25 +349,38 @@ async function refreshRules(): Promise<void> {
     await syncExtensionData(await getExtensionData(), new Date())
   } catch (error) {
     console.error('Prohibeo failed to load rules.', error)
+    removeBootGuard()
     clearScheduledRefresh()
     removeBlockOverlay()
     removeHideStyle()
   }
 }
 
-void refreshRules()
+if (markContentScriptLoaded()) {
+  ensureBootGuard()
+  void refreshRules()
 
-watchExtensionData((extensionData) => {
-  void syncExtensionData(extensionData, new Date()).catch((error) => {
-    console.error('Prohibeo failed to sync updated rules.', error)
-    clearScheduledRefresh()
-    removeBlockOverlay()
-    removeHideStyle()
-  })
-})
-
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
+  document.addEventListener('DOMContentLoaded', () => {
     void refreshRules()
-  }
-})
+  })
+
+  window.addEventListener('load', () => {
+    void refreshRules()
+  })
+
+  watchExtensionData((extensionData) => {
+    void syncExtensionData(extensionData, new Date()).catch((error) => {
+      console.error('Prohibeo failed to sync updated rules.', error)
+      removeBootGuard()
+      clearScheduledRefresh()
+      removeBlockOverlay()
+      removeHideStyle()
+    })
+  })
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      void refreshRules()
+    }
+  })
+}
